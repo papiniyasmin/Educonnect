@@ -22,7 +22,6 @@ import {
 // Styles
 import styles from "./settingsPage.module.scss";
 
-// Types (Opcional: mover para types.ts se reutilizado)
 interface UserFormData {
   nome: string;
   email: string;
@@ -41,7 +40,6 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Estado completo
   const [formData, setFormData] = useState<UserFormData>({
     nome: "",
     email: "",
@@ -58,7 +56,7 @@ export default function SettingsPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>("");
 
-  // Carregar dados
+  // 1. CARREGAR DADOS
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -67,11 +65,15 @@ export default function SettingsPage() {
           router.push("/login");
           return;
         }
-        if (!res.ok) throw new Error("Erro");
+        if (!res.ok) throw new Error("Erro ao carregar");
 
         const data = await res.json();
         setFormData(data);
-        setAvatarPreview(data.foto_url);
+        
+        // Se a foto_url existir, usamos como preview inicial
+        if (data.foto_url) {
+          setAvatarPreview(data.foto_url);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -89,21 +91,29 @@ export default function SettingsPage() {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
+      // Gera um preview local temporário
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
 
+  // 2. SALVAR ALTERAÇÕES
   const handleSave = async () => {
     setSaving(true);
     try {
       const data = new FormData();
-      // Adiciona campos de texto
-      Object.keys(formData).forEach((key) => {
-        if (key !== "foto_url") {
-          data.append(key, (formData as any)[key]);
-        }
-      });
+      
+      // Adiciona todos os campos de texto ao FormData
+      data.append("nome", formData.nome);
+      data.append("email", formData.email);
+      data.append("ano_escolar", formData.ano_escolar);
+      data.append("curso", formData.curso);
+      data.append("telefone", formData.telefone);
+      data.append("morada", formData.morada);
+      data.append("bio", formData.bio);
+      data.append("interesses", formData.interesses);
+      data.append("habilidades", formData.habilidades);
 
+      // Se houver uma nova imagem, envia com o nome "avatar" (que o backend espera)
       if (selectedFile) {
         data.append("avatar", selectedFile);
       }
@@ -113,17 +123,25 @@ export default function SettingsPage() {
         body: data,
       });
 
-      if (!res.ok) throw new Error("Falha");
+      if (!res.ok) throw new Error("Falha ao salvar");
 
-      setTimeout(() => {
-        alert("Perfil atualizado com sucesso!");
-        router.refresh();
-        setSaving(false);
-      }, 500);
+      const result = await res.json();
+
+      // Se o backend devolveu a nova URL do Cloudinary, atualizamos o estado
+      if (result.newAvatar) {
+        setAvatarPreview(result.newAvatar);
+        setFormData(prev => ({ ...prev, foto_url: result.newAvatar }));
+      }
+
+      alert("Perfil atualizado com sucesso!");
+      
+      // router.refresh() ajuda a atualizar componentes de servidor (como a Navbar)
+      router.refresh();
 
     } catch (err) {
       console.error(err);
-      alert("Erro ao salvar.");
+      alert("Erro ao salvar as alterações. Verifique sua conexão.");
+    } finally {
       setSaving(false);
     }
   };
@@ -169,44 +187,48 @@ export default function SettingsPage() {
             <div className={styles.banner}></div>
             <div className={styles.cardBody}>
               
-              {/* Avatar Upload */}
               <div className={styles.avatarSection}>
                 <div className={styles.avatarWrapper}>
                   <Avatar className={styles.avatar}>
                     <AvatarImage src={avatarPreview} className="object-cover" />
-                    <AvatarFallback className="text-3xl bg-slate-100">{formData.nome?.[0]}</AvatarFallback>
+                    <AvatarFallback className="text-3xl bg-slate-100">
+                      {formData.nome ? formData.nome[0].toUpperCase() : <User />}
+                    </AvatarFallback>
                   </Avatar>
                   <label htmlFor="avatar-upload" className={styles.cameraLabel}>
                     <Camera className="w-5 h-5" />
-                    <input id="avatar-upload" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                    <input 
+                      id="avatar-upload" 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleFileChange} 
+                      className="hidden" 
+                    />
                   </label>
                 </div>
               </div>
 
-              {/* User Basic Info */}
               <div className={styles.userInfo}>
                 <h2>{formData.nome || "Utilizador"}</h2>
                 <p>{formData.curso || "Sem curso definido"}</p>
               </div>
 
-              {/* Contact List */}
               <div className={styles.contactList}>
                 <div className={styles.contactItem}>
-                  <Mail />
+                  <Mail className="w-4 h-4" />
                   {formData.email}
                 </div>
                 <div className={styles.contactItem}>
-                  <GraduationCap />
+                  <GraduationCap className="w-4 h-4" />
                   {formData.ano_escolar ? `${formData.ano_escolar} Ano` : "Ano não definido"}
                 </div>
                 {formData.morada && (
                   <div className={styles.contactItem}>
-                    <MapPin />
+                    <MapPin className="w-4 h-4" />
                     {formData.morada}
                   </div>
                 )}
               </div>
-
             </div>
           </div>
 
@@ -219,7 +241,6 @@ export default function SettingsPage() {
                 <TabsTrigger value="sobre">Sobre Mim</TabsTrigger>
               </TabsList>
 
-              {/* ABA: DADOS PESSOAIS */}
               <TabsContent value="pessoal">
                 <Card className={styles.formCard}>
                   <CardHeader className={styles.cardHeader}>
@@ -251,7 +272,6 @@ export default function SettingsPage() {
                 </Card>
               </TabsContent>
 
-              {/* ABA: DADOS ACADÉMICOS */}
               <TabsContent value="academico">
                 <Card className={styles.formCard}>
                   <CardHeader className={styles.cardHeader}>
@@ -285,7 +305,6 @@ export default function SettingsPage() {
                 </Card>
               </TabsContent>
 
-              {/* ABA: SOBRE MIM */}
               <TabsContent value="sobre">
                 <Card className={styles.formCard}>
                   <CardHeader className={styles.cardHeader}>

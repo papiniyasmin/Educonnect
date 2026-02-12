@@ -13,7 +13,7 @@ cloudinary.config({
 
 export const dynamic = 'force-dynamic';
 
-// Função auxiliar para validar o utilizador
+// Função para extrair ID do utilizador
 function getUserIdFromToken() {
   const cookieStore = cookies();
   const token = cookieStore.get("token");
@@ -24,113 +24,109 @@ function getUserIdFromToken() {
     const decoded: any = jwt.verify(token.value, secret);
     return decoded.id;
   } catch (e) {
+    console.error("❌ Erro JWT:", e);
     return null;
   }
 }
 
-// --- GET: Carregar dados do perfil ---
+// --- GET: Carregar dados ---
 export async function GET() {
   try {
     const userId = getUserIdFromToken();
     if (!userId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
     const connection = await pool.getConnection();
-
     try {
-      // Query ajustada aos nomes das tabelas do teu SQL (utilizador e info)
       const query = `
-        SELECT 
-          u.nome, u.email, u.ano_escolar, u.curso, u.foto_url, u.telefone, u.morada,
-          i.bio, i.interesses, i.habilidades
+        SELECT u.nome, u.email, u.ano_escolar, u.curso, u.foto_url, u.telefone, u.morada,
+               i.bio, i.interesses, i.habilidades
         FROM utilizador u
         LEFT JOIN info i ON u.id = i.aluno_id
         WHERE u.id = ?
       `;
-
       const [rows]: any = await connection.execute(query, [userId]);
-
-      if (rows.length === 0) return NextResponse.json({ error: "Utilizador não encontrado" }, { status: 404 });
-
-      return NextResponse.json({
-        id: userId,
-        ...rows[0],
-        telefone: rows[0].telefone || "",
-        morada: rows[0].morada || "",
-        bio: rows[0].bio || "",
-        interesses: rows[0].interesses || "",
-        habilidades: rows[0].habilidades || ""
-      });
-      
+      return NextResponse.json(rows[0] || {});
     } finally {
       connection.release();
     }
   } catch (error) {
-    console.error("Erro GET settings:", error);
     return NextResponse.json({ error: "Erro interno" }, { status: 500 });
   }
 }
 
-// --- PUT: Atualizar perfil com Cloudinary ---
+// --- PUT: Atualizar Perfil ---
 export async function PUT(req: Request) {
   let connection;
   try {
     const userId = getUserIdFromToken();
-    if (!userId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    console.log(">>> [DEBUG] Tentativa de update para o user ID:", userId);
+
+    if (!userId) {
+      return NextResponse.json({ error: "Sessão expirada" }, { status: 401 });
+    }
 
     const formData = await req.formData();
-    
-    // Captura de todos os campos do formulário
-    const nome = (formData.get("nome") as string) || "";
-    const email = (formData.get("email") as string) || "";
-    const ano_escolar = (formData.get("ano_escolar") as string) || "";
-    const curso = (formData.get("curso") as string) || "";
-    const telefone = (formData.get("telefone") as string) || "";
-    const morada = (formData.get("morada") as string) || "";
-    const bio = (formData.get("bio") as string) || "";
-    const interesses = (formData.get("interesses") as string) || "";
-    const habilidades = (formData.get("habilidades") as string) || "";
+    const nome = formData.get("nome") as string;
+    const email = formData.get("email") as string;
+    const ano_escolar = formData.get("ano_escolar") as string;
+    const curso = formData.get("curso") as string;
+    const telefone = formData.get("telefone") as string;
+    const morada = formData.get("morada") as string;
+    const bio = formData.get("bio") as string;
+    const interesses = formData.get("interesses") as string;
+    const habilidades = formData.get("habilidades") as string;
     const file = formData.get("avatar") as File | null;
 
     let imageUrl = null;
 
-    // Lógica de Upload Cloudinary (Sem usar o disco rígido da Vercel)
+    // 2. Upload para Cloudinary
     if (file && file.size > 0) {
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
+      console.log(">>> [DEBUG] Ficheiro detetado, a iniciar upload para Cloudinary...");
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-      const uploadResponse: any = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          { folder: "educonnect_avatars" },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        ).end(buffer);
-      });
+        const uploadResponse: any = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "educonnect_avatars" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            }
+          );
+          stream.end(buffer);
+        });
 
-      imageUrl = uploadResponse.secure_url; // URL HTTPS final
+        imageUrl = uploadResponse.secure_url;
+        console.log("✅ [DEBUG] Upload feito com sucesso:", imageUrl);
+      } catch (cloudErr: any) {
+        console.error("❌ [ERROR] Erro no Cloudinary:", cloudErr.message || cloudErr);
+        return NextResponse.json({ error: "Falha no Cloudinary", details: cloudErr.message }, { status: 500 });
+      }
     }
 
+    // 3. Base de Dados
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
     try {
-      // 1. Atualizar Tabela 'utilizador'
-      let queryUser = `UPDATE utilizador SET nome=?, email=?, ano_escolar=?, curso=?, telefone=?, morada=?`;
-      const paramsUser: any[] = [nome, email, ano_escolar, curso, telefone, morada];
+      console.log(">>> [DEBUG] A iniciar queries no MySQL...");
+
+      // Update Utilizador
+      let queryUser = "UPDATE `utilizador` SET `nome`=?, `email`=?, `ano_escolar`=?, `curso`=?, `telefone`=?, `morada`=?";
+      const paramsUser = [nome, email, ano_escolar, curso, telefone, morada];
 
       if (imageUrl) {
-        queryUser += `, foto_url=?`;
+        queryUser += ", `foto_url`=?";
         paramsUser.push(imageUrl);
       }
-      queryUser += ` WHERE id=?`;
+      queryUser += " WHERE `id`=?";
       paramsUser.push(userId);
 
       await connection.execute(queryUser, paramsUser);
 
-      // 2. Atualizar ou Inserir na Tabela 'info'
+      // Update ou Insert na tabela info
       const [infoRows]: any = await connection.execute("SELECT id FROM info WHERE aluno_id = ?", [userId]);
-
       if (infoRows.length > 0) {
         await connection.execute(
           "UPDATE info SET bio=?, interesses=?, habilidades=?, data_atualizacao=NOW() WHERE aluno_id=?",
@@ -144,15 +140,17 @@ export async function PUT(req: Request) {
       }
 
       await connection.commit();
+      console.log("✅ [DEBUG] Transação concluída no MySQL.");
       return NextResponse.json({ success: true, newAvatar: imageUrl });
 
-    } catch (err) {
+    } catch (dbErr: any) {
       if (connection) await connection.rollback();
-      throw err;
+      console.error("❌ [ERROR] Erro no MySQL:", dbErr.message);
+      return NextResponse.json({ error: "Erro na BD", details: dbErr.message }, { status: 500 });
     }
-  } catch (error) {
-    console.error("Erro PUT settings:", error);
-    return NextResponse.json({ error: "Erro ao atualizar" }, { status: 500 });
+  } catch (error: any) {
+    console.error("❌ [ERROR] Erro Geral:", error);
+    return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
   } finally {
     if (connection) connection.release();
   }

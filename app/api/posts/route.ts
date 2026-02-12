@@ -1,11 +1,19 @@
 import { NextResponse } from "next/server";
 import pool from "@/db";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { v2 as cloudinary } from "cloudinary";
 
-// GET: Buscar posts
+// 1. Configuração do Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export const dynamic = 'force-dynamic';
+
+// --- GET: Buscar posts (Mantém a lógica, mas garante a conexão) ---
 export async function GET() {
   try {
     const cookieStore = cookies();
@@ -14,7 +22,7 @@ export async function GET() {
 
     if (token) {
       try {
-        const decoded: any = jwt.verify(token, process.env.JWT_SECRET || "EDUCONNECT_SECRET_2024");
+        const decoded: any = jwt.verify(token, "EDUCONNECT_SECRET_2024");
         currentUserId = decoded.id;
       } catch (e) {}
     }
@@ -39,9 +47,6 @@ export async function GET() {
           contentObj = { texto_principal: row.raw_content, imagem_url: null, likes: [], comentarios: [] };
         }
 
-        const likesList = Array.isArray(contentObj.likes) ? contentObj.likes : [];
-        const commentsList = Array.isArray(contentObj.comentarios) ? contentObj.comentarios : [];
-
         return {
           id: row.id,
           content: contentObj.texto_principal || "",
@@ -49,9 +54,9 @@ export async function GET() {
           timestamp: row.timestamp,
           author: row.author,
           authorAvatar: row.authorAvatar,
-          likes: likesList.length,
-          isLiked: likesList.includes(currentUserId),
-          comments: commentsList
+          likes: Array.isArray(contentObj.likes) ? contentObj.likes.length : 0,
+          isLiked: Array.isArray(contentObj.likes) ? contentObj.likes.includes(currentUserId) : false,
+          comments: Array.isArray(contentObj.comentarios) ? contentObj.comentarios : []
         };
       });
 
@@ -64,18 +69,18 @@ export async function GET() {
   }
 }
 
-// POST: Criar Post
+// --- POST: Criar Post com Cloudinary ---
 export async function POST(req: Request) {
+  let connection;
   try {
     // 1. Autenticação
     const cookieStore = cookies();
     const token = cookieStore.get("token")?.value;
-
     if (!token) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
     let userId;
     try {
-      const decoded: any = jwt.verify(token, process.env.JWT_SECRET || "EDUCONNECT_SECRET_2024");
+      const decoded: any = jwt.verify(token, "EDUCONNECT_SECRET_2024");
       userId = decoded.id;
     } catch (e) {
       return NextResponse.json({ error: "Sessão inválida" }, { status: 401 });
@@ -83,25 +88,30 @@ export async function POST(req: Request) {
 
     // 2. Processar FormData
     const formData = await req.formData();
-    const content = formData.get("content") as string; // Pode vir vazio
+    const content = formData.get("content") as string;
     const file = formData.get("image") as File | null;
 
-    // --- CORREÇÃO DO ERRO 400 ---
-    // Só dá erro se AMBOS estiverem vazios. Se tiver imagem e sem texto, passa.
     if ((!content || !content.trim()) && !file) {
       return NextResponse.json({ error: "O post precisa de texto ou de uma imagem." }, { status: 400 });
     }
 
-    // 3. Upload Imagem
+    // 3. LÓGICA CLOUDINARY (Substitui o salvamento local)
     let imageUrl = null;
-    if (file) {
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const filename = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-      
-      await mkdir(uploadDir, { recursive: true });
-      await writeFile(path.join(uploadDir, filename), buffer);
-      imageUrl = `/uploads/${filename}`;
+    if (file && file.size > 0) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+
+      const uploadResponse: any = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { folder: "educonnect_posts" }, // Pasta diferente para organizar
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(buffer);
+      });
+
+      imageUrl = uploadResponse.secure_url;
     }
 
     // 4. Salvar na Base de Dados
@@ -112,7 +122,9 @@ export async function POST(req: Request) {
       comentarios: []
     });
 
-    const connection = await pool.getConnection();
+    connection = await pool.getConnection();
+    await connection.beginTransaction();
+
     try {
       const [resMsg]: any = await connection.execute(
         'INSERT INTO mensagem (data, titulo, conteudo, tipo) VALUES (NOW(), ?, ?, ?)',
@@ -124,13 +136,17 @@ export async function POST(req: Request) {
         [userId, resMsg.insertId]
       );
 
+      await connection.commit();
       return NextResponse.json({ success: true });
-    } finally {
-      connection.release();
+    } catch (err) {
+      await connection.rollback();
+      throw err;
     }
 
   } catch (error) {
     console.error("Erro POST:", error);
     return NextResponse.json({ error: 'Erro ao criar post' }, { status: 500 });
+  } finally {
+    if (connection) connection.release();
   }
 }
