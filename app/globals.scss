@@ -1,0 +1,206 @@
+@import '../styles/variables';
+@import '../styles/mixins';
+
+// Reset and base styles
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: $font-family-sans;
+  line-height: 1.6;
+}
+
+body {
+  @include gradient-background;
+  color: $white;
+  min-height: 100vh;
+  font-family: $font-family-sans;
+}
+
+// Container
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 $spacing-4;
+  
+  @include tablet {
+    padding: 0 $spacing-6;
+  }
+  
+  @include desktop {
+    padding: 0 $spacing-8;
+  }
+}
+
+// Typography
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: $spacing-4;
+}
+
+h1 {
+  font-size: 2.5rem;
+  
+  @include mobile {
+    font-size: 2rem;
+  }
+}
+
+h2 {
+  font-size: 2rem;
+  
+  @include mobile {
+    font-size: 1.75rem;
+  }
+}
+
+h3 {
+  font-size: 1.5rem;
+}
+
+p {
+  margin-bottom: $spacing-4;
+  line-height: 1.6;
+}
+
+// Links
+a {
+  color: $primary-emerald;
+  text-decoration: none;
+  @include transition-smooth;
+  
+  &:hover {
+    color: $primary-emerald-light;
+  }
+}
+
+// Buttons
+.btn {
+  @include button-base;
+  padding: $spacing-3 $spacing-6;
+  font-size: 0.875rem;
+  
+  &.btn-primary {
+    @include button-primary;
+  }
+  
+  &.btn-ghost {
+    @include button-ghost;
+  }
+  
+  &.btn-sm {
+    padding: $spacing-2 $spacing-4;
+    font-size: 0.75rem;
+  }
+  
+  &.btn-lg {
+    padding: $spacing-4 $spacing-8;
+    font-size: 1rem;
+  }
+}
+
+// Cards
+.card {
+  @include card-base;
+  padding: $spacing-6;
+  @include transition-smooth;
+  
+  &:hover {
+    background-color: rgba($slate-800, 0.7);
+  }
+}
+
+// Forms
+.form-group {
+  margin-bottom: $spacing-4;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: $spacing-2;
+  color: $slate-300;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.form-input {
+  @include input-base;
+}
+
+.form-textarea {
+  @include input-base;
+  resize: vertical;
+  min-height: 80px;
+}
+
+// Utilities
+.text-center {
+  text-align: center;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Grid system
+.grid {
+  display: grid;
+  gap: $spacing-6;
+  
+  &.grid-cols-1 {
+    grid-template-columns: 1fr;
+  }
+  
+  &.grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+    
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  &.grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+    
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+    
+    @include tablet {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  &.grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr);
+    
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+    
+    @include tablet {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}

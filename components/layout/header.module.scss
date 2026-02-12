@@ -1,0 +1,57 @@
+/* components/layout/header.module.scss */
+@reference "../../app/globals.css";
+
+.wrapper {
+  /* Layout = @apply */
+  @apply sticky top-0 z-50 shrink-0;
+  
+  /* Decoração = CSS Padrão */
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5); /* border-slate-700/50 */
+  background-color: rgba(15, 23, 42, 0.8);       /* bg-slate-900/80 */
+  backdrop-filter: blur(4px);
+}
+
+.container {
+  @apply max-w-7xl mx-auto px-4 py-3 flex items-center justify-between;
+}
+
+.logoLink {
+  @apply flex items-center gap-2;
+}
+
+.logoIcon {
+  @apply w-8 h-8 rounded-lg flex items-center justify-center;
+  background-color: #10b981; /* bg-emerald-500 */
+}
+
+.navDesktop {
+  @apply hidden md:flex items-center gap-6;
+}
+
+.navLink {
+  @apply transition-colors;
+  color: #cbd5e1; /* text-slate-300 */
+  
+  &:hover {
+    color: #34d399; /* text-emerald-400 */
+  }
+  
+  &.active {
+    /* AQUI ESTAVA O ERRO: Substituído por CSS nativo */
+    color: #34d399;      /* text-emerald-400 */
+    font-weight: 500;    /* font-medium */
+  }
+}
+
+.actionsArea {
+  @apply flex items-center gap-2 md:gap-4;
+}
+
+.iconBtn {
+  @apply w-4 h-4 md:w-5 md:h-5 transition-colors;
+  color: #cbd5e1; /* text-slate-300 */
+  
+  &:hover {
+    color: white;
+  }
+}

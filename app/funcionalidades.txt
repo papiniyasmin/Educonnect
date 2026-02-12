@@ -1,0 +1,36 @@
+Dashboard
+
+1- Curtir e salvar na bd FEITO
+2- Comentar e salvar na bd FEITO
+3- Adicionar foto nos posts  FEITO
+
+----------------------------------------------------------------------------------
+Grupos
+
+1- Poder criar novos grupos FEITO
+2- Poder entrar nos grupos e ver os posts relacionado a cada grupo FEITO
+
+----------------------------------------------------------------------------------
+Settings 
+
+1- Conseguir adicionar imagem de perfil FEITO
+2- Alteraçoes salvar na bd FEITO
+3- Conseguir alterar a biografia e dados pessoais FEITO
+
+----------------------------------------------------------------------------------
+Chat
+
+1- Mostrar os grupos relacionados a cada utilizador FEITO
+
+----------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------
+
+1- Ao registar é redirecionado para o dashboard de outro utilizador FEITO
+2- Criar comentário ligar o nome à base de dados, erro ao publicar o post; FEITO
+3- Acessar aos grupos;
+4- Editar perfil não está ligado; FEITO
+
+-----------------------------------------------------------------------------------
+
+1- Implementar uma page.tsx para poder aceitar pedidos de amizade ou recusar FEITO

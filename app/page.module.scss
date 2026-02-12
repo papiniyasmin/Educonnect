@@ -1,0 +1,315 @@
+/* --- Variáveis do Tema --- */
+$bg-dark: #0f172a;       // Slate 900
+$bg-card: #1e293b;       // Slate 800
+$bg-card-hover: #334155; // Slate 700
+$border: #334155;        // Slate 700
+$primary: #10b981;       // Emerald 500
+$primary-hover: #059669; // Emerald 600
+$text-white: #f8fafc;
+$text-light: #cbd5e1;    // Slate 300
+$text-gray: #94a3b8;     // Slate 400
+
+/* Cores dos Ícones (Fundos transparentes para modernidade) */
+$bg-emerald: rgba(16, 185, 129, 0.15); $color-emerald: #34d399;
+$bg-blue: rgba(59, 130, 246, 0.15);    $color-blue: #60a5fa;
+$bg-purple: rgba(168, 85, 247, 0.15);  $color-purple: #c084fc;
+$bg-pink: rgba(236, 72, 153, 0.15);    $color-pink: #f472b6;
+$bg-teal: rgba(20, 184, 166, 0.15);    $color-teal: #2dd4bf;
+
+/* Mixins */
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- ESTRUTURA GERAL --- */
+.homepage {
+  min-height: 100vh;
+  background-color: $bg-dark;
+  /* Gradiente sutil para dar profundidade sem pesar */
+  background-image: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+  color: $text-white;
+  overflow-x: hidden; /* Evita scroll lateral indesejado */
+}
+
+/* --- CONTAINER (A Chave para Monitores Grandes) --- */
+/* Isso segura o conteúdo no meio da tela em monitores grandes */
+.container {
+  width: 100%;
+  max-width: 1280px; /* Limite padrão moderno (macbook/monitores) */
+  margin: 0 auto;    /* Centraliza */
+  padding: 0 1.5rem; /* Espaçamento lateral no mobile */
+
+  @media (min-width: 1400px) {
+    max-width: 1400px; /* Um pouco mais largo em telas gigantes */
+  }
+}
+
+/* --- HEADER --- */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba($border, 0.5);
+  background-color: rgba($bg-dark, 0.85); /* Mais opaco para leitura */
+  backdrop-filter: blur(12px);
+
+  .headerContent {
+    height: 4.5rem; // Altura fixa para consistência
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+
+    .logoIcon {
+      width: 2.5rem;
+      height: 2.5rem;
+      background-color: $primary;
+      border-radius: 0.6rem;
+      @include flex-center;
+      color: white;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .logoText {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: $text-white;
+      letter-spacing: -0.025em;
+    }
+  }
+
+  .headerActions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+}
+
+/* --- BOTÕES --- */
+.btnPrimary {
+  background-color: $primary;
+  color: white;
+  font-weight: 600;
+  border: none;
+  transition: all 0.2s;
+  &:hover { background-color: $primary-hover; transform: translateY(-1px); }
+}
+
+.btnGhost {
+  color: $text-light;
+  &:hover { color: $text-white; background-color: rgba(255, 255, 255, 0.05); }
+}
+
+.btnOutline {
+  background: transparent;
+  border: 1px solid $border;
+  color: $text-light;
+  &:hover { border-color: $text-white; color: $text-white; background: rgba(255,255,255,0.05); }
+}
+
+/* --- HERO SECTION --- */
+.hero {
+  padding: 4rem 0 6rem 0; /* Espaço generoso */
+  text-align: center;
+  position: relative;
+
+  .heroContent {
+    max-width: 50rem; /* Limita largura do texto para leitura fácil */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .heroTitle {
+    font-size: 2.25rem;
+    line-height: 1.1;
+    font-weight: 800;
+    color: $text-white;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.03em;
+    
+    /* Gradiente no texto */
+    background: linear-gradient(to right, #fff, #cbd5e1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    @media (min-width: 768px) { font-size: 3.5rem; }
+    @media (min-width: 1024px) { font-size: 4rem; }
+  }
+
+  .heroDescription {
+    font-size: 1.125rem;
+    color: $text-gray;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+    max-width: 40rem;
+    
+    @media (min-width: 768px) { font-size: 1.25rem; }
+  }
+
+  .heroActions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 20rem;
+
+    @media (min-width: 640px) { 
+      flex-direction: row; 
+      justify-content: center;
+      width: auto;
+      max-width: none;
+    }
+  }
+}
+
+/* --- FEATURES SECTION --- */
+.features {
+  padding: 4rem 0;
+  background-color: rgba($bg-dark, 0.5); /* Leve separação visual */
+
+  .featuresTitle {
+    font-size: 2rem;
+    font-weight: 700;
+    color: $text-white;
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .featuresGrid {
+    display: grid;
+    gap: 1.5rem;
+    /* GRID INTELIGENTE: Cria colunas automaticamente baseada no espaço disponível */
+    /* Isso resolve o problema do monitor grande vs laptop */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+
+  .featureCard {
+    background-color: rgba($bg-card, 0.4);
+    border: 1px solid $border;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    &:hover {
+      background-color: $bg-card;
+      border-color: $primary; /* Borda verde ao passar o mouse */
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  .featureIcon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.75rem;
+    @include flex-center;
+    margin-bottom: 1.25rem;
+    
+    svg { width: 1.5rem; height: 1.5rem; }
+
+    /* Cores aplicadas via classe */
+    &.emerald { background-color: $bg-emerald; color: $color-emerald; }
+    &.blue { background-color: $bg-blue; color: $color-blue; }
+    &.purple { background-color: $bg-purple; color: $color-purple; }
+    &.pink { background-color: $bg-pink; color: $color-pink; }
+    &.teal { background-color: $bg-teal; color: $color-teal; }
+  }
+
+  .featureTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $text-white;
+    margin-bottom: 0.75rem;
+  }
+
+  .featureDescription {
+    font-size: 0.95rem;
+    color: $text-gray;
+    line-height: 1.6;
+  }
+}
+
+/* --- CTA SECTION --- */
+.cta {
+  padding: 6rem 0;
+  
+  .ctaCard {
+    /* Gradiente moderno */
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(15, 23, 42, 0.4) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 1.5rem;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+
+    @media (min-width: 768px) { padding: 4rem 2rem; }
+  }
+
+  .ctaTitle {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: $text-white;
+    margin-bottom: 1rem;
+    @media (min-width: 768px) { font-size: 2.25rem; }
+  }
+
+  .ctaDescription {
+    font-size: 1.125rem;
+    color: $text-light;
+    margin-bottom: 2rem;
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* --- FOOTER --- */
+.footer {
+  border-top: 1px solid $border;
+  background-color: $bg-dark;
+  padding: 3rem 0;
+  
+  .footerContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .footerLogo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    .footerLogoIcon {
+      width: 2rem;
+      height: 2rem;
+      background-color: $primary;
+      border-radius: 0.5rem;
+      @include flex-center;
+      color: white;
+    }
+    
+    span { font-weight: 600; font-size: 1.125rem; color: $text-white; }
+  }
+
+  .footerText {
+    color: $text-gray;
+    font-size: 0.875rem;
+    text-align: center;
+  }
+}

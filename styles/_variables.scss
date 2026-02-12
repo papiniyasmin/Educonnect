@@ -1,0 +1,67 @@
+// Colors
+$primary-emerald: #10b981;
+$primary-emerald-dark: #059669;
+$primary-emerald-light: #34d399;
+
+$slate-900: #0f172a;
+$slate-800: #1e293b;
+$slate-700: #334155;
+$slate-600: #475569;
+$slate-500: #64748b;
+$slate-400: #94a3b8;
+$slate-300: #cbd5e1;
+$slate-200: #e2e8f0;
+$slate-100: #f1f5f9;
+
+$white: #ffffff;
+$black: #000000;
+
+// Accent colors
+$blue-500: #3b82f6;
+$blue-400: #60a5fa;
+$red-500: #ef4444;
+$red-400: #f87171;
+$orange-500: #f97316;
+$orange-400: #fb923c;
+$green-500: #22c55e;
+$green-400: #4ade80;
+$purple-500: #a855f7;
+$purple-400: #c084fc;
+$pink-500: #ec4899;
+$pink-400: #f472b6;
+$teal-500: #14b8a6;
+$teal-400: #2dd4bf;
+
+// Typography
+$font-family-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+$font-family-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+// Spacing
+$spacing-1: 0.25rem;
+$spacing-2: 0.5rem;
+$spacing-3: 0.75rem;
+$spacing-4: 1rem;
+$spacing-5: 1.25rem;
+$spacing-6: 1.5rem;
+$spacing-8: 2rem;
+$spacing-10: 2.5rem;
+$spacing-12: 3rem;
+$spacing-16: 4rem;
+$spacing-20: 5rem;
+
+// Border radius
+$border-radius-sm: 0.375rem;
+$border-radius-md: 0.5rem;
+$border-radius-lg: 0.75rem;
+$border-radius-xl: 1rem;
+
+// Shadows
+$shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+$shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+$shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+// Breakpoints
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;

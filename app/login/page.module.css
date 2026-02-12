@@ -1,0 +1,191 @@
+.loginPage {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.loginContainer {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.loginHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  color: #cbd5e1;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: white;
+}
+
+.backLink svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 0.5rem;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.logoIcon {
+  width: 40px;
+  height: 40px;
+  background-color: #10b981;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoIcon svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.logoText {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+}
+
+.subtitle {
+  color: #94a3b8;
+  margin: 0;
+}
+
+.loginCard {
+  background-color: rgba(30, 41, 59, 0.5);
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+}
+
+.cardHeader {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.cardTitle {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.cardDescription {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formLabel {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.inputContainer {
+  position: relative;
+}
+
+.inputContainer svg {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  width: 16px;
+  height: 16px;
+  color: #94a3b8;
+  z-index: 1;
+}
+
+.formInput {
+  width: 100%;
+  padding: 0.75rem;
+  padding-left: 40px;
+  background-color: rgba(51, 65, 85, 0.5);
+  border: 1px solid #475569;
+  border-radius: 0.5rem;
+  color: white;
+  font-size: 0.875rem;
+}
+
+.formInput::placeholder {
+  color: #94a3b8;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.submitButton {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  margin-bottom: 1.5rem;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: #059669;
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.registerLink {
+  text-align: center;
+}
+
+.registerText {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.registerText a {
+  color: #10b981;
+  transition: all 0.2s ease-in-out;
+  text-decoration: none;
+}
+
+.registerText a:hover {
+  color: #34d399;
+}

@@ -1,0 +1,183 @@
+/* registerPage.module.scss */
+
+/* --- Variáveis do Tema --- */
+$bg-dark: #0f172a;       // slate-900
+$bg-card: #1e293b;       // slate-800
+$bg-input: rgba(51, 65, 85, 0.5); // slate-700/50
+$border: #334155;        // slate-700
+$text-white: #f8fafc;
+$text-gray: #94a3b8;     // slate-400
+$text-light: #cbd5e1;    // slate-300
+
+$primary: #10b981;       // emerald-500
+$primary-hover: #059669; // emerald-600
+$error-bg: rgba(239, 68, 68, 0.1); // red-500/10
+$error-text: #f87171;    // red-400
+$error-border: rgba(239, 68, 68, 0.5);
+
+/* Mixins */
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Layout Principal --- */
+.pageContainer {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: linear-gradient(to bottom right, $bg-dark, #1e293b, $bg-dark);
+}
+
+.contentWrapper {
+  width: 100%;
+  max-width: 28rem; // max-w-md
+}
+
+/* --- Header Section --- */
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .backLink {
+    display: inline-flex;
+    align-items: center;
+    color: $text-light;
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+    transition: color 0.2s;
+    font-size: 0.875rem;
+
+    svg { margin-right: 0.5rem; width: 1rem; height: 1rem; }
+    &:hover { color: $text-white; }
+  }
+
+  .logoWrapper {
+    @include flex-center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    .logoIcon {
+      width: 2.5rem;
+      height: 2.5rem;
+      background-color: $primary;
+      border-radius: 0.5rem;
+      @include flex-center;
+    }
+    h1 { font-size: 1.5rem; font-weight: 700; color: $text-white; }
+  }
+
+  .subtitle { color: $text-gray; }
+}
+
+/* --- Card & Form --- */
+.registerCard {
+  background-color: rgba($bg-card, 0.5);
+  border: 1px solid $border;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.cardTitle { color: $text-white; text-align: center; }
+.cardDesc { color: $text-gray; text-align: center; }
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* --- Inputs e Labels --- */
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label { color: $text-light; font-size: 0.875rem; font-weight: 500; }
+}
+
+.inputWrapper {
+  position: relative;
+
+  .inputIcon {
+    position: absolute;
+    left: 0.75rem;
+    top: 0.75rem;
+    width: 1rem;
+    height: 1rem;
+    color: $text-gray;
+  }
+
+  .inputField {
+    padding-left: 2.5rem; // Espaço para o ícone
+    background-color: $bg-input;
+    border-color: $border;
+    color: $text-white;
+    
+    &::placeholder { color: $text-gray; }
+    &:focus { border-color: $primary; box-shadow: 0 0 0 2px rgba($primary, 0.2); }
+  }
+}
+
+/* --- Selects --- */
+.gridRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.selectTrigger {
+  background-color: $bg-input;
+  border-color: $border;
+  color: $text-white;
+  &:focus { ring: 2px solid rgba($primary, 0.2); }
+}
+
+.selectContent {
+  background-color: $bg-card;
+  border-color: $border;
+  color: $text-light;
+}
+
+/* --- Botões e Estados --- */
+.submitBtn {
+  width: 100%;
+  background-color: $primary-hover;
+  color: white;
+  margin-top: 0.5rem;
+  transition: background-color 0.2s;
+
+  &:hover { background-color: darken($primary-hover, 5%); }
+  &:disabled { opacity: 0.7; cursor: not-allowed; }
+}
+
+/* --- Mensagens de Erro --- */
+.errorBox {
+  background-color: $error-bg;
+  border: 1px solid $error-border;
+  color: $error-text;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* --- Footer Link --- */
+.footerText {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: $text-gray;
+
+  a {
+    color: #34d399; // emerald-400
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+    &:hover { color: #6ee7b7; } // emerald-300
+  }
+}

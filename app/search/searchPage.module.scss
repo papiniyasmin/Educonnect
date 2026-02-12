@@ -1,0 +1,241 @@
+/* searchPage.module.scss */
+
+/* --- Variáveis do Tema --- */
+$bg-dark: #0f172a;       // slate-900
+$bg-card: #1e293b;       // slate-800
+$bg-input: rgba(30, 41, 59, 0.5); // slate-800/50
+$border: #334155;        // slate-700
+$text-white: #f8fafc;
+$text-gray: #94a3b8;     // slate-400
+$text-light: #cbd5e1;    // slate-300
+
+$primary: #10b981;       // emerald-500
+$primary-hover: #059669; // emerald-600
+
+/* Mixins */
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- Layout Principal --- */
+.pageContainer {
+  min-height: 100vh;
+  background: linear-gradient(to bottom right, $bg-dark, #1e293b, $bg-dark);
+  color: $text-light;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainContent {
+  width: 100%;
+  max-width: 56rem; // max-w-4xl
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  flex: 1;
+}
+
+/* --- Header (Padronizado) --- */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba($border, 0.5);
+  background-color: rgba($bg-dark, 0.8);
+  backdrop-filter: blur(8px);
+
+  .headerContent {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logoLink {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: white;
+
+    .logoIcon {
+      width: 2rem;
+      height: 2rem;
+      background-color: $primary;
+      border-radius: 0.5rem;
+      @include flex-center;
+    }
+    span { font-size: 1.125rem; font-weight: 700; }
+  }
+
+  .nav {
+    display: none;
+    @media (min-width: 768px) { display: flex; align-items: center; gap: 1.5rem; }
+    
+    a {
+      text-decoration: none;
+      color: $text-light;
+      font-weight: 500;
+      transition: color 0.2s;
+      &:hover { color: $text-white; }
+    }
+  }
+
+  .userActions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    @media (min-width: 768px) { gap: 1rem; }
+    
+    a { 
+      color: white; 
+      &:hover { color: $primary; } 
+    }
+    
+    .avatarSmall {
+      width: 2rem;
+      height: 2rem;
+      border: 1px solid $border;
+    }
+  }
+}
+
+/* --- Área de Pesquisa --- */
+.searchSection {
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 1.875rem; // 3xl
+    font-weight: 700;
+    color: $text-white;
+    margin-bottom: 1rem;
+  }
+
+  .inputWrapper {
+    position: relative;
+
+    .searchIcon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1.25rem;
+      height: 1.25rem;
+      color: $text-gray;
+    }
+
+    .searchInput {
+      padding-left: 2.5rem;
+      background-color: $bg-input;
+      border-color: $border;
+      color: $text-white;
+      
+      &::placeholder { color: $text-gray; }
+      &:focus { border-color: $primary; box-shadow: 0 0 0 1px $primary; }
+    }
+  }
+}
+
+/* --- Tabs --- */
+.tabsContainer {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid $border;
+  overflow-x: auto; // Permite scroll em mobile
+
+  .tabBtn {
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+    color: $text-gray;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:hover { color: $text-white; }
+
+    &.active {
+      border-color: $primary;
+      color: #34d399; // emerald-400
+    }
+  }
+}
+
+/* --- Lista de Resultados --- */
+.resultsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .sectionTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $text-white;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Cartão Genérico (Posts e Grupos) */
+.resultCard {
+  background-color: rgba($bg-card, 0.5);
+  border: 1px solid $border;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: $primary;
+    background-color: rgba($bg-card, 0.8);
+  }
+
+  h4 { font-size: 1.125rem; font-weight: 600; color: $text-white; margin-bottom: 0.5rem; }
+  p { font-size: 0.875rem; color: $text-gray; }
+}
+
+/* Cartão de Pessoa */
+.personCard {
+  @extend .resultCard;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  .avatarLarge {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .personInfo {
+    h4 { margin: 0; }
+    p { margin: 0; font-size: 0.875rem; color: $text-gray; }
+  }
+}
+
+/* --- Estado Vazio --- */
+.emptyState {
+  text-align: center;
+  padding: 3rem 0;
+  
+  .emptyIcon {
+    width: 4rem;
+    height: 4rem;
+    color: #475569; // slate-600
+    margin: 0 auto 1rem auto;
+  }
+  
+  p { font-size: 1.125rem; color: $text-gray; }
+}
+
+/* --- Footer --- */
+.footer {
+  margin-top: auto;
+  background-color: rgba($bg-dark, 0.8);
+  border-top: 1px solid rgba($border, 0.5);
+  padding: 1rem;
+  text-align: center;
+  color: $text-gray;
+  font-size: 0.875rem;
+}

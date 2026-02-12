@@ -1,0 +1,307 @@
+/* settingsPage.module.scss */
+
+/* --- Variáveis --- */
+$bg-light: #f9fafb;      // gray-50
+$bg-dark: #020617;       // slate-950
+$bg-card-light: #ffffff;
+$bg-card-dark: #0f172a;  // slate-900
+
+$text-primary: #0f172a;  // slate-900
+$text-secondary: #64748b;// slate-500
+$text-light: #f8fafc;
+
+$emerald-500: #10b981;
+$emerald-600: #059669;
+$emerald-700: #047857;
+$teal-600: #0d9488;
+
+$border-light: #e2e8f0;
+$border-dark: #1e293b;
+
+/* --- Mixins --- */
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin mobile {
+  @media (max-width: 768px) { @content; }
+}
+
+/* --- Layout Principal --- */
+.pageContainer {
+  min-height: 100vh;
+  background-color: $bg-light;
+  padding: 2rem 1rem;
+  
+  @media (prefers-color-scheme: dark) {
+    background-color: $bg-dark;
+  }
+}
+
+.contentWrapper {
+  max-width: 72rem; // max-w-6xl
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* --- Header --- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+
+  @include mobile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerText {
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: $text-primary;
+      margin-bottom: 0.5rem;
+      @media (prefers-color-scheme: dark) { color: $text-light; }
+    }
+    p {
+      color: $text-secondary;
+      font-size: 1rem;
+    }
+  }
+
+  .headerActions {
+    display: flex;
+    gap: 0.75rem;
+  }
+}
+
+.saveButton {
+  background-color: $emerald-600;
+  color: white;
+  min-width: 140px;
+  
+  &:hover { background-color: $emerald-700; }
+  &:disabled { opacity: 0.7; }
+}
+
+/* --- Grid Principal --- */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 1fr 2fr; // 1/3 para perfil, 2/3 para forms
+  }
+}
+
+/* --- Cartão de Identidade (Coluna Esquerda) --- */
+.identityCard {
+  background-color: $bg-card-light;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  height: fit-content;
+
+  @media (prefers-color-scheme: dark) {
+    background-color: $bg-card-dark;
+  }
+
+  .banner {
+    height: 8rem;
+    background: linear-gradient(to right, $emerald-500, $teal-600);
+  }
+
+  .cardBody {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    position: relative;
+  }
+}
+
+/* Avatar Upload Section */
+.avatarSection {
+  display: flex;
+  justify-content: center;
+  margin-top: -4rem; // Puxa para cima do banner
+  margin-bottom: 1rem;
+
+  .avatarWrapper {
+    position: relative;
+    
+    .avatar {
+      width: 8rem;
+      height: 8rem;
+      border: 4px solid $bg-card-light;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+      @media (prefers-color-scheme: dark) {
+        border-color: $bg-card-dark;
+      }
+    }
+
+    .cameraLabel {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background-color: $emerald-600;
+      color: white;
+      padding: 0.5rem;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+
+      &:hover { background-color: $emerald-700; }
+    }
+  }
+}
+
+/* Info do Usuário */
+.userInfo {
+  text-align: center;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $text-primary;
+    @media (prefers-color-scheme: dark) { color: $text-light; }
+  }
+
+  p {
+    color: $emerald-600;
+    font-weight: 500;
+    @media (prefers-color-scheme: dark) { color: #34d399; }
+  }
+}
+
+/* Lista de Contactos */
+.contactList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .contactItem {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: $text-secondary;
+    
+    @media (prefers-color-scheme: dark) { color: #94a3b8; }
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+      margin-right: 0.75rem;
+      color: $emerald-500;
+    }
+  }
+}
+
+/* --- Área de Formulários (Coluna Direita) --- */
+.tabsContainer {
+  width: 100%;
+
+  .tabsList {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 1.5rem;
+    background-color: $bg-card-light;
+    padding: 0.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid $border-light;
+
+    @media (prefers-color-scheme: dark) {
+      background-color: $bg-card-dark;
+      border-color: $border-dark;
+    }
+  }
+}
+
+/* Estilo dos Cartões de Formulário */
+.formCard {
+  background-color: $bg-card-light;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  
+  @media (prefers-color-scheme: dark) {
+    background-color: $bg-card-dark;
+  }
+
+  .cardHeader {
+    padding: 1.5rem;
+    padding-bottom: 0.5rem;
+
+    .cardTitle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+      
+      svg { color: $emerald-600; }
+    }
+    
+    .cardDesc { color: $text-secondary; }
+  }
+
+  .cardContent {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+/* Layout dos Inputs */
+.formGrid {
+  display: grid;
+  gap: 1rem;
+
+  &.cols-2 {
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
+.inputGroup {
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* Select Customizado (para igualar shadcn input) */
+.customSelect {
+  display: flex;
+  height: 2.5rem;
+  width: 100%;
+  border-radius: 0.375rem;
+  border: 1px solid $border-light;
+  background-color: $bg-card-light;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+
+  &:focus {
+    outline: none;
+    ring: 2px solid $emerald-500;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    background-color: $bg-dark;
+    border-color: $border-dark;
+    color: white;
+  }
+}
+
+/* Loading State */
+.loadingContainer {
+  height: 100vh;
+  @include flex-center;
+  background-color: $bg-light;
+  @media (prefers-color-scheme: dark) { background-color: $bg-dark; }
+}

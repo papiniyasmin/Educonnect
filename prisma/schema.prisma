@@ -1,0 +1,262 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model aluno {
+  id                                       Int               @id @default(autoincrement())
+  nome                                     String            @db.VarChar(100)
+  email                                    String            @unique(map: "email") @db.VarChar(150)
+  senha_hash                               String            @db.VarChar(255)
+  ano_escolar                              aluno_ano_escolar
+  curso                                    String?           @db.VarChar(100)
+  foto_url                                 String?           @db.VarChar(255)
+  data_cadastro                            DateTime          @default(now()) @db.Timestamp(0)
+  status                                   aluno_status?     @default(ativo)
+  comentario                               comentario[]
+  curtida                                  curtida[]
+  grupomembro                              grupomembro[]
+  grupopost                                grupopost[]
+  logatividade                             logatividade[]
+  mensagem_mensagem_remetente_idToaluno    mensagem[]        @relation("mensagem_remetente_idToaluno")
+  mensagem_mensagem_destinatario_idToaluno mensagem[]        @relation("mensagem_destinatario_idToaluno")
+  mentoria_mentoria_mentor_idToaluno       mentoria[]        @relation("mentoria_mentor_idToaluno")
+  mentoria_mentoria_novato_idToaluno       mentoria[]        @relation("mentoria_novato_idToaluno")
+  notificacao                              notificacao[]
+  perfil                                   perfil?
+  post                                     post[]
+}
+
+model comentario {
+  id                        Int          @id @default(autoincrement())
+  post_id                   Int
+  aluno_id                  Int
+  conteudo                  String       @db.Text
+  data_comentario           DateTime     @default(now()) @db.Timestamp(0)
+  respondendo_comentario_id Int?
+  post                      post         @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "comentario_ibfk_1")
+  aluno                     aluno        @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "comentario_ibfk_2")
+  comentario                comentario?  @relation("comentarioTocomentario", fields: [respondendo_comentario_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "comentario_ibfk_3")
+  other_comentario          comentario[] @relation("comentarioTocomentario")
+
+  @@index([aluno_id], map: "aluno_id")
+  @@index([post_id], map: "post_id")
+  @@index([respondendo_comentario_id], map: "respondendo_comentario_id")
+}
+
+model curtida {
+  id           Int      @id @default(autoincrement())
+  post_id      Int
+  aluno_id     Int
+  data_curtida DateTime @default(now()) @db.Timestamp(0)
+  post         post     @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "curtida_ibfk_1")
+  aluno        aluno    @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "curtida_ibfk_2")
+
+  @@unique([post_id, aluno_id], map: "post_id")
+  @@index([aluno_id], map: "aluno_id")
+}
+
+model grupo {
+  id           Int           @id @default(autoincrement())
+  nome         String        @db.VarChar(100)
+  descricao    String?       @db.Text
+  tipo         grupo_tipo?   @default(academico)
+  data_criacao DateTime      @default(now()) @db.Timestamp(0)
+  grupomembro  grupomembro[]
+  grupopost    grupopost[]
+}
+
+model grupomembro {
+  id           Int                @id @default(autoincrement())
+  grupo_id     Int
+  aluno_id     Int
+  papel        grupomembro_papel? @default(membro)
+  data_entrada DateTime           @default(now()) @db.Timestamp(0)
+  grupo        grupo              @relation(fields: [grupo_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "grupomembro_ibfk_1")
+  aluno        aluno              @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "grupomembro_ibfk_2")
+
+  @@unique([grupo_id, aluno_id], map: "grupo_id")
+  @@index([aluno_id], map: "aluno_id")
+}
+
+model grupopost {
+  id              Int      @id @default(autoincrement())
+  grupo_id        Int
+  aluno_id        Int
+  conteudo        String   @db.Text
+  data_publicacao DateTime @default(now()) @db.Timestamp(0)
+  grupo           grupo    @relation(fields: [grupo_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "grupopost_ibfk_1")
+  aluno           aluno    @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "grupopost_ibfk_2")
+
+  @@index([aluno_id], map: "aluno_id")
+  @@index([grupo_id], map: "grupo_id")
+}
+
+model logatividade {
+  id                  Int      @id @default(autoincrement())
+  aluno_id            Int?
+  acao                String   @db.VarChar(255)
+  tabela_afetada      String?  @db.VarChar(100)
+  registro_afetado_id Int?
+  data_acao           DateTime @default(now()) @db.Timestamp(0)
+  aluno               aluno?   @relation(fields: [aluno_id], references: [id], onUpdate: Restrict, map: "logatividade_ibfk_1")
+
+  @@index([aluno_id], map: "aluno_id")
+}
+
+model mensagem {
+  id                                    Int      @id @default(autoincrement())
+  remetente_id                          Int
+  destinatario_id                       Int
+  conteudo                              String   @db.Text
+  lida                                  Boolean? @default(false)
+  data_envio                            DateTime @default(now()) @db.Timestamp(0)
+  aluno_mensagem_remetente_idToaluno    aluno    @relation("mensagem_remetente_idToaluno", fields: [remetente_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mensagem_ibfk_1")
+  aluno_mensagem_destinatario_idToaluno aluno    @relation("mensagem_destinatario_idToaluno", fields: [destinatario_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mensagem_ibfk_2")
+
+  @@index([destinatario_id], map: "destinatario_id")
+  @@index([remetente_id], map: "remetente_id")
+}
+
+model mentoria {
+  id                              Int              @id @default(autoincrement())
+  mentor_id                       Int
+  novato_id                       Int
+  status                          mentoria_status? @default(ativa)
+  data_inicio                     DateTime         @default(now()) @db.Timestamp(0)
+  data_fim                        DateTime?        @db.Timestamp(0)
+  avaliacao                       Int?
+  aluno_mentoria_mentor_idToaluno aluno            @relation("mentoria_mentor_idToaluno", fields: [mentor_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mentoria_ibfk_1")
+  aluno_mentoria_novato_idToaluno aluno            @relation("mentoria_novato_idToaluno", fields: [novato_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "mentoria_ibfk_2")
+
+  @@unique([mentor_id, novato_id], map: "mentor_id")
+  @@index([novato_id], map: "novato_id")
+}
+
+model notificacao {
+  id               Int              @id @default(autoincrement())
+  aluno_id         Int
+  tipo             notificacao_tipo
+  referencia_id    Int?
+  lida             Boolean?         @default(false)
+  data_notificacao DateTime         @default(now()) @db.Timestamp(0)
+  aluno            aluno            @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "notificacao_ibfk_1")
+
+  @@index([aluno_id], map: "aluno_id")
+}
+
+model perfil {
+  id               Int            @id @default(autoincrement())
+  aluno_id         Int            @unique(map: "aluno_id")
+  bio              String?        @db.Text
+  interesses       String?        @db.Text
+  habilidades      String?        @db.Text
+  redes_sociais    String?        @db.LongText
+  data_nascimento  DateTime?      @db.Date
+  genero           perfil_genero?
+  telefone         String?        @db.VarChar(20)
+  endereco         String?        @db.Text
+  data_atualizacao DateTime       @default(now()) @db.Timestamp(0)
+  aluno            aluno          @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "perfil_ibfk_1")
+}
+
+model post {
+  id              Int                @id @default(autoincrement())
+  aluno_id        Int
+  titulo          String?            @db.VarChar(255)
+  conteudo        String             @db.Text
+  tipo            post_tipo?         @default(experiencia)
+  data_publicacao DateTime           @default(now()) @db.Timestamp(0)
+  visibilidade    post_visibilidade? @default(publico)
+  comentario      comentario[]
+  curtida         curtida[]
+  aluno           aluno              @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "post_ibfk_1")
+  postanexo       postanexo[]
+  posttag         posttag[]
+
+  @@index([aluno_id], map: "aluno_id")
+}
+
+model postanexo {
+  id          Int            @id @default(autoincrement())
+  post_id     Int
+  tipo        postanexo_tipo
+  url         String         @db.VarChar(255)
+  data_upload DateTime       @default(now()) @db.Timestamp(0)
+  post        post           @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "postanexo_ibfk_1")
+
+  @@index([post_id], map: "post_id")
+}
+
+model posttag {
+  id      Int    @id @default(autoincrement())
+  post_id Int
+  tag     String @db.VarChar(50)
+  post    post   @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "posttag_ibfk_1")
+
+  @@index([post_id], map: "post_id")
+}
+
+enum notificacao_tipo {
+  resposta
+  curtida
+  novo_post_grupo
+  mensagem
+  nova_mentoria
+}
+
+enum postanexo_tipo {
+  imagem
+  arquivo
+}
+
+enum grupo_tipo {
+  academico
+  social
+  eventos
+}
+
+enum grupomembro_papel {
+  membro
+  moderador
+  administrador
+}
+
+enum mentoria_status {
+  ativa
+  concluida
+  cancelada
+}
+
+enum aluno_ano_escolar {
+  X10 @map("10º")
+  X11 @map("11º")
+  X12 @map("12º")
+}
+
+enum post_tipo {
+  duvida
+  dica
+  experiencia
+}
+
+enum post_visibilidade {
+  publico
+  grupos
+}
+
+enum perfil_genero {
+  Masculino
+  Feminino
+  Outro
+}
+
+enum aluno_status {
+  ativo
+  inativo
+  suspenso
+}

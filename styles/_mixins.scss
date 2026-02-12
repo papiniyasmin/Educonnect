@@ -1,0 +1,125 @@
+@import 'variables';
+
+// Flexbox mixins
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+// Button mixins
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $border-radius-md;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@mixin button-primary {
+  @include button-base;
+  background-color: $primary-emerald;
+  color: $white;
+  
+  &:hover:not(:disabled) {
+    background-color: $primary-emerald-dark;
+  }
+}
+
+@mixin button-ghost {
+  @include button-base;
+  background-color: transparent;
+  color: $slate-300;
+  
+  &:hover:not(:disabled) {
+    background-color: rgba($slate-800, 0.5);
+    color: $white;
+  }
+}
+
+// Card mixins
+@mixin card-base {
+  background-color: rgba($slate-800, 0.5);
+  border: 1px solid $slate-700;
+  border-radius: $border-radius-lg;
+  backdrop-filter: blur(8px);
+}
+
+// Input mixins
+@mixin input-base {
+  width: 100%;
+  padding: $spacing-3;
+  background-color: rgba($slate-700, 0.5);
+  border: 1px solid $slate-600;
+  border-radius: $border-radius-md;
+  color: $white;
+  font-size: 0.875rem;
+  
+  &::placeholder {
+    color: $slate-400;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: $primary-emerald;
+    box-shadow: 0 0 0 2px rgba($primary-emerald, 0.2);
+  }
+}
+
+// Responsive mixins
+@mixin mobile {
+  @media (max-width: #{$breakpoint-sm - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: #{$breakpoint-sm}) and (max-width: #{$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+// Gradient mixins
+@mixin gradient-background {
+  background: linear-gradient(135deg, $slate-900 0%, $slate-800 50%, $slate-900 100%);
+}
+
+// Animation mixins
+@mixin transition-smooth {
+  transition: all 0.2s ease-in-out;
+}
+
+@mixin hover-lift {
+  transition: transform 0.2s ease-in-out;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+}

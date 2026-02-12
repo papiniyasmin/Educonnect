@@ -1,0 +1,321 @@
+/* groupPage.module.scss */
+
+/* --- Variáveis (Tema Slate Dark) --- */
+$bg-dark: #020617;       // slate-950
+$bg-card: #0f172a;       // slate-900
+$bg-subtle: #1e293b;     // slate-800
+$border: #1e293b;        // slate-800
+$border-hover: #334155;  // slate-700
+
+$text-white: #f8fafc;    // slate-50
+$text-light: #cbd5e1;    // slate-300
+$text-gray: #64748b;     // slate-500
+
+$primary: #4f46e5;       // indigo-600
+$primary-hover: #4338ca; // indigo-700
+
+/* Cores de Tags/Badges */
+$emerald-bg: #022c22; $emerald-text: #34d399; $emerald-border: #064e3b;
+$red-bg: #450a0a;     $red-text: #f87171;     $red-border: #7f1d1d;
+$blue-bg: #172554;    $blue-text: #60a5fa;    $blue-border: #1e3a8a;
+$gray-bg: #0f172a;    $gray-text: #94a3b8;    $gray-border: #334155;
+
+/* --- Mixins --- */
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* --- ESTILOS GERAIS --- */
+.container {
+  min-height: 100vh;
+  background-color: $bg-dark;
+  color: $text-white;
+  padding: 1.5rem;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.contentWrapper {
+  max-width: 56rem; // 4xl
+  margin: 0 auto;
+}
+
+/* --- HEADER DO GRUPO --- */
+.backButton {
+  color: $text-gray !important;
+  padding-left: 0 !important;
+  margin-bottom: 1rem;
+  
+  &:hover { color: $text-white !important; }
+}
+
+.groupHeaderCard {
+  background-color: $bg-card;
+  border: 1px solid $border;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  h1 { 
+    font-size: 1.875rem; 
+    font-weight: 700; 
+    color: $text-white; 
+    margin-bottom: 0.5rem; 
+  }
+  
+  p { 
+    color: $text-gray; 
+    margin-bottom: 1rem; 
+  }
+  
+  .groupMeta {
+    @include flex-center;
+    gap: 0.75rem;
+
+    .typeTag {
+      background-color: $emerald-bg;
+      color: $emerald-text;
+      border: 1px solid $emerald-border;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.625rem;
+      border-radius: 0.375rem;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.025em;
+    }
+
+    .memberCount {
+      font-size: 0.75rem;
+      color: $text-gray;
+    }
+  }
+}
+
+/* --- LISTA DE POSTS --- */
+.postsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  .sectionHeader {
+    @include flex-between;
+    margin-bottom: 1rem;
+    h2 { font-size: 1.25rem; font-weight: 600; }
+  }
+}
+
+.emptyState {
+  text-align: center;
+  padding: 2.5rem;
+  background-color: rgba($bg-card, 0.5);
+  border: 1px dashed $border;
+  border-radius: 0.75rem;
+  
+  p:first-child { color: $text-gray; font-style: italic; }
+  p:last-child { color: $text-gray; font-size: 0.875rem; margin-top: 0.25rem; }
+}
+
+/* --- POST CARD --- */
+.postCard {
+  background-color: $bg-card;
+  border: 1px solid $border;
+  border-radius: 0.75rem;
+  transition: border-color 0.2s;
+
+  &:hover { border-color: $border-hover; }
+
+  .cardHeader {
+    padding-bottom: 0.75rem;
+    
+    .headerContent {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .authorInfo {
+      @include flex-center;
+      gap: 0.75rem;
+
+      .avatar { border: 1px solid $border-hover; }
+
+      .authorText {
+        p { font-size: 0.875rem; font-weight: 600; color: $text-white; margin: 0; }
+        .timestamp {
+          @include flex-center;
+          gap: 0.25rem;
+          font-size: 0.75rem;
+          color: $text-gray;
+        }
+      }
+    }
+  }
+
+  /* Conteúdo Principal do Post */
+  .mainContent {
+    margin-bottom: 1.5rem;
+    h3 { font-size: 1.125rem; font-weight: 700; color: $text-white; margin-bottom: 0.5rem; }
+    p { color: $text-light; white-space: pre-line; line-height: 1.6; font-size: 0.95rem; }
+  }
+}
+
+/* --- BADGES (Definidas na raiz para serem exportadas para o JS) --- */
+.postTypeBadge {
+  font-size: 0.625rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  border-width: 1px;
+  border-style: solid;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.duvida { 
+  background-color: $red-bg; 
+  color: $red-text; 
+  border-color: $red-border; 
+}
+
+.dica { 
+  background-color: $blue-bg; 
+  color: $blue-text; 
+  border-color: $blue-border; 
+}
+
+.default { 
+  background-color: $gray-bg; 
+  color: $text-gray; 
+  border-color: $gray-border; 
+}
+
+/* --- COMENTÁRIOS --- */
+.commentsSection {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid $border;
+  
+  h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $text-gray;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+  }
+
+  .commentList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+.commentItem {
+  display: flex;
+  gap: 0.75rem;
+  animation: fadeIn 0.3s ease-in-out;
+
+  .commentAvatar {
+    width: 2rem;
+    height: 2rem;
+    margin-top: 0.25rem;
+    border: 1px solid $border;
+  }
+
+  .commentBubble {
+    flex: 1;
+    background-color: rgba($bg-subtle, 0.6);
+    border: 1px solid rgba($border, 0.5);
+    border-radius: 0.75rem;
+    border-top-left-radius: 0;
+    padding: 0.75rem;
+
+    .bubbleHeader {
+      @include flex-between;
+      align-items: baseline;
+      margin-bottom: 0.25rem;
+
+      .author { font-size: 0.875rem; font-weight: 600; color: #e2e8f0; }
+      .date { font-size: 0.625rem; color: $text-gray; }
+    }
+
+    p { font-size: 0.875rem; color: $text-light; white-space: pre-wrap; line-height: 1.5; }
+  }
+}
+
+/* --- ÁREA DE RESPOSTA --- */
+.replyArea {
+  margin-top: 1.25rem;
+  padding-top: 0.5rem;
+
+  .btnReplyToggle {
+    color: $text-gray !important;
+    padding-left: 0;
+    margin-left: -0.5rem;
+    &:hover { color: $text-white !important; background-color: rgba($bg-subtle, 0.5) !important; }
+  }
+}
+
+.replyInputWrapper {
+  background-color: rgba($bg-dark, 0.5);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid $border;
+  animation: zoomIn 0.2s ease-out;
+
+  .replyLabel {
+    font-size: 0.75rem;
+    color: $text-gray;
+    font-weight: 500;
+    margin-left: 0.25rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  textarea {
+    background-color: $bg-card;
+    border-color: $border-hover;
+    color: $text-white;
+    min-height: 80px;
+    margin-bottom: 0.75rem;
+    
+    &:focus { border-color: $primary; outline: none; }
+  }
+
+  .actionButtons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+
+    .btnCancel {
+      color: $text-gray !important;
+      &:hover { color: $text-white !important; background: transparent; }
+    }
+
+    .btnSend {
+      background-color: $primary !important;
+      color: white !important;
+      &:hover { background-color: $primary-hover !important; }
+      &:disabled { opacity: 0.7; cursor: not-allowed; }
+    }
+  }
+}
+
+/* --- ANIMAÇÕES --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}

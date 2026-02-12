@@ -1,0 +1,393 @@
+/* groups.module.scss */
+
+/* --- Variáveis --- */
+$bg-dark: #0f172a;       // slate-900
+$bg-card: #1e293b;       // slate-800
+$bg-card-hover: #334155; // slate-700
+$border: #334155;        // slate-700
+$text-white: #f8fafc;
+$text-gray: #94a3b8;     // slate-400
+$text-light: #cbd5e1;    // slate-300
+
+$primary: #10b981;       // emerald-500
+$primary-hover: #059669; // emerald-600
+$primary-dark: #047857;  // emerald-700
+
+/* Breakpoints */
+$md: 768px;
+$lg: 1024px;
+
+/* Mixins */
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  min-height: 100vh;
+  background-color: $bg-dark;
+  color: $text-light;
+  position: relative;
+}
+
+/* --- HEADER --- */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid rgba($border, 0.5);
+  background-color: rgba($bg-dark, 0.8);
+  backdrop-filter: blur(8px);
+
+  .headerContent {
+    max-width: 80rem; // 7xl
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logoLink {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: white;
+
+    .logoBox {
+      width: 2rem;
+      height: 2rem;
+      background-color: $primary;
+      border-radius: 0.5rem;
+      @include flex-center;
+      color: white;
+    }
+    span { font-size: 1.125rem; font-weight: 700; }
+  }
+
+  .nav {
+    display: none;
+    @media (min-width: $md) { display: flex; align-items: center; gap: 1.5rem; }
+    
+    a {
+      text-decoration: none;
+      color: $text-light;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+      &:hover { color: $text-white; }
+    }
+    .active { color: #34d399; font-weight: 500; }
+  }
+
+  .userActions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    
+    a { color: $text-light; transition: color 0.2s; }
+    a:hover { color: $text-white; }
+    .logoutIcon:hover { color: #f87171; } // red-400
+    
+    .avatar {
+      border: 1px solid $border;
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+}
+
+/* --- MAIN CONTENT --- */
+.mainWrapper {
+  max-width: 80rem;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  /* Espaço extra em baixo para o footer mobile não tapar conteúdo */
+  padding-bottom: 5rem; 
+
+  @media (min-width: $md) {
+    padding-bottom: 2rem;
+  }
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+
+  h2 { font-size: 1.875rem; font-weight: 700; color: $text-white; }
+  
+  .btnCreate {
+    background-color: $primary-hover;
+    color: white;
+    &:hover { background-color: $primary-dark; }
+  }
+}
+
+/* --- FILTERS --- */
+.filterCard {
+  background-color: rgba($bg-card, 0.5);
+  border: 1px solid $border;
+  margin-bottom: 2rem;
+
+  .filterContent {
+    padding: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .searchContainer {
+    position: relative;
+    flex: 1;
+    min-width: 200px;
+
+    svg {
+      position: absolute;
+      left: 0.75rem;
+      top: 0.75rem;
+      color: $text-gray;
+    }
+
+    input {
+      padding-left: 2.5rem;
+      background-color: rgba($bg-card-hover, 0.5);
+      border-color: rgba($border, 0.8);
+      color: white;
+      &::placeholder { color: $text-gray; }
+      &:focus { border-color: $primary; outline: none; }
+    }
+  }
+
+  .selectInput {
+    background-color: rgba($bg-card-hover, 0.5);
+    border: 1px solid rgba($border, 0.8);
+    color: white;
+    padding: 0 0.75rem;
+    height: 2.5rem;
+    border-radius: 0.375rem;
+    &:focus { outline: none; border-color: $primary; }
+    
+    option { background-color: $bg-card; color: white; }
+  }
+
+  .btnFilter {
+    border-color: $border;
+    color: $text-light;
+    background: transparent;
+    
+    &.active {
+      background-color: $primary-hover;
+      color: white;
+      border-color: transparent;
+    }
+    
+    &:hover:not(.active) {
+      background-color: $bg-card-hover;
+      color: white;
+    }
+  }
+}
+
+/* --- GRID --- */
+.groupsGrid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+  @media (min-width: $md) { grid-template-columns: 1fr 1fr; }
+  @media (min-width: $lg) { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+.loadingText {
+  text-align: center;
+  padding: 5rem 0;
+  color: $text-gray;
+}
+
+/* --- GROUP CARD --- */
+.groupCard {
+  background-color: rgba($bg-card, 0.5);
+  border: 1px solid $border;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    background-color: $bg-card;
+    border-color: $bg-card-hover;
+    transform: translateY(-2px);
+  }
+
+  .cardHeader {
+    display: flex;
+    gap: 0.75rem;
+    padding-bottom: 0; 
+  }
+
+  .avatarBox {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.5rem;
+    flex-shrink: 0;
+    @include flex-center;
+    background: linear-gradient(to bottom right, #10b981, #0d9488);
+    color: #ecfdf5; 
+    
+    img { width: 100%; height: 100%; object-fit: cover; border-radius: 0.5rem; }
+  }
+
+  .headerInfo {
+    .title { color: $text-white; font-size: 1.125rem; font-weight: 600; line-height: 1.2; }
+    .badges { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
+  }
+
+  .description {
+    color: $text-gray;
+    margin-bottom: 1.5rem;
+    min-height: 2.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    
+    /* Clamp 2 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .statsContainer {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 1.5rem;
+    background-color: rgba(15, 23, 42, 0.4);
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+
+    .stat { display: flex; align-items: center; gap: 0.375rem; }
+  }
+
+  .footerActions {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba($border, 0.5);
+    margin-top: auto;
+
+    .btnJoin {
+      flex: 1;
+      background-color: $primary-hover;
+      color: white;
+      &:hover { background-color: $primary-dark; }
+    }
+    
+    .btnLeave {
+      flex: 1;
+      background-color: $bg-card-hover;
+      color: $text-light;
+      &:hover { background-color: #475569; color: white; }
+    }
+
+    .linkAccess { flex: 1; }
+    .btnAccess {
+      width: 100%;
+      color: $text-gray;
+      &:hover { color: white; background-color: rgba($bg-card-hover, 0.5); }
+    }
+  }
+}
+
+/* --- BADGES --- */
+.badgeBlue { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+.badgePurple { background-color: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.2); }
+
+/* --- MODAL --- */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  @include flex-center;
+  padding: 1rem;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 32rem;
+  background-color: $bg-card;
+  border: 1px solid $border;
+  color: $text-light;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  .modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba($border, 0.5);
+  }
+
+  .btnClose { color: $text-gray; &:hover { color: $text-white; } }
+
+  .formGroup {
+    margin-bottom: 1rem;
+    label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: $text-white; }
+    input, select {
+      background-color: rgba($bg-dark, 0.5);
+      border-color: rgba($border, 0.8);
+      color: white;
+      &:focus { border-color: $primary; outline: none; }
+    }
+  }
+
+  .btnSubmit {
+    width: 100%;
+    margin-top: 1rem;
+    background-color: $primary;
+    &:hover { background-color: $primary-hover; }
+  }
+}
+
+/* --- MOBILE NAV (Footer) --- */
+.mobileNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  border-top: 1px solid $border;
+  background-color: rgba($bg-dark, 0.95);
+  backdrop-filter: blur(8px);
+
+  /* Esconde em ecrãs médios e grandes */
+  @media (min-width: $md) { display: none; }
+
+  .navContent {
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-around; 
+
+    a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: $text-gray;
+      gap: 0.25rem;
+      transition: color 0.2s;
+      
+      span { font-size: 0.75rem; font-weight: 500; }
+      &:hover { color: $text-white; }
+    }
+
+    .activeLink { color: $primary; }
+  }
+}

@@ -1,0 +1,213 @@
+/* Variáveis de Cores */
+$bg-dark-start: #0f172a;
+$bg-dark-mid: #1e293b;
+$primary: #10b981;
+$primary-hover: #059669;
+$primary-light: #34d399;
+$text-white: #ffffff;
+$text-light: #cbd5e1;
+$text-gray: #94a3b8;
+$border: #334155;
+$input-bg: rgba(51, 65, 85, 0.5);
+
+.loginPage {
+  min-height: 100vh;
+  background: linear-gradient(135deg, $bg-dark-start 0%, $bg-dark-mid 50%, $bg-dark-start 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.loginContainer {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.loginHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .backLink {
+    display: inline-flex;
+    align-items: center;
+    color: $text-light;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease-in-out;
+    text-decoration: none;
+    font-size: 0.875rem;
+
+    svg {
+      width: 16px;
+      height: 16px;
+      margin-right: 0.5rem;
+    }
+
+    &:hover {
+      color: $text-white;
+    }
+  }
+
+  .logoContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    .logoIcon {
+      width: 40px;
+      height: 40px;
+      background-color: $primary;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      svg {
+        width: 24px;
+        height: 24px;
+        color: $text-white;
+      }
+    }
+
+    .logoText {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $text-white;
+      margin: 0;
+    }
+  }
+
+  .subtitle {
+    color: $text-gray;
+    margin: 0;
+  }
+}
+
+.loginCard {
+  background-color: rgba(30, 41, 59, 0.5);
+  border: 1px solid $border;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(4px);
+
+  .cardHeader {
+    text-align: center;
+    margin-bottom: 1.5rem;
+
+    .cardTitle {
+      color: $text-white;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      margin-top: 0;
+    }
+
+    .cardDescription {
+      color: $text-gray;
+      font-size: 0.875rem;
+      margin: 0;
+    }
+  }
+}
+
+.loginForm {
+  display: flex;
+  flex-direction: column;
+
+  .formGroup {
+    margin-bottom: 1rem;
+
+    .formLabel {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: $text-light;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .inputContainer {
+      position: relative;
+
+      svg {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        color: $text-gray;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .formInput {
+        width: 100%;
+        padding: 0.75rem;
+        padding-left: 40px;
+        background-color: $input-bg;
+        border: 1px solid #475569;
+        border-radius: 0.5rem;
+        color: $text-white;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+
+        &::placeholder {
+          color: $text-gray;
+        }
+
+        &:focus {
+          outline: none;
+          border-color: $primary;
+          box-shadow: 0 0 0 2px rgba($primary, 0.2);
+        }
+      }
+    }
+  }
+
+  .submitButton {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background-color: $primary;
+    color: $text-white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    margin-bottom: 1.5rem;
+    margin-top: 0.5rem;
+
+    &:hover:not(:disabled) {
+      background-color: $primary-hover;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .registerLink {
+    text-align: center;
+
+    .registerText {
+      color: $text-gray;
+      font-size: 0.875rem;
+      margin: 0;
+
+      a {
+        color: $primary;
+        transition: all 0.2s ease-in-out;
+        text-decoration: none;
+        font-weight: 500;
+
+        &:hover {
+          color: $primary-light;
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
