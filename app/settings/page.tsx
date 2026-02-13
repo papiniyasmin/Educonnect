@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// UI Components
+// UI Components (Mantive os seus imports)
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,15 +62,26 @@ export default function SettingsPage() {
       try {
         const res = await fetch("/api/user/settings");
         if (res.status === 401) {
-          router.push("/login");
+          router.push("/login"); // Redireciona se não estiver logado
           return;
         }
-        if (!res.ok) throw new Error("Erro ao carregar");
+        if (!res.ok) throw new Error("Erro ao carregar dados");
 
         const data = await res.json();
-        setFormData(data);
         
-        // Se a foto_url existir, usamos como preview inicial
+        setFormData({
+          nome: data.nome || "",
+          email: data.email || "",
+          ano_escolar: data.ano_escolar || "",
+          curso: data.curso || "",
+          telefone: data.telefone || "",
+          morada: data.morada || "",
+          bio: data.bio || "",
+          interesses: data.interesses || "",
+          habilidades: data.habilidades || "",
+          foto_url: data.foto_url || ""
+        });
+        
         if (data.foto_url) {
           setAvatarPreview(data.foto_url);
         }
@@ -90,9 +101,15 @@ export default function SettingsPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      
+      // Validação básica de tamanho (ex: max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("A imagem é muito grande. Máximo 5MB.");
+        return;
+      }
+
       setSelectedFile(file);
-      // Gera um preview local temporário
-      setAvatarPreview(URL.createObjectURL(file));
+      setAvatarPreview(URL.createObjectURL(file)); // Preview local imediato
     }
   };
 
@@ -102,7 +119,7 @@ export default function SettingsPage() {
     try {
       const data = new FormData();
       
-      // Adiciona todos os campos de texto ao FormData
+      // Adiciona campos textuais
       data.append("nome", formData.nome);
       data.append("email", formData.email);
       data.append("ano_escolar", formData.ano_escolar);
@@ -113,34 +130,33 @@ export default function SettingsPage() {
       data.append("interesses", formData.interesses);
       data.append("habilidades", formData.habilidades);
 
-      // Se houver uma nova imagem, envia com o nome "avatar" (que o backend espera)
+      // Adiciona o arquivo apenas se foi selecionado
       if (selectedFile) {
         data.append("avatar", selectedFile);
       }
 
       const res = await fetch("/api/user/settings", {
         method: "PUT",
-        body: data,
+        body: data, // Não precisa de headers, o browser define multipart/form-data automaticamente
       });
-
-      if (!res.ok) throw new Error("Falha ao salvar");
 
       const result = await res.json();
 
-      // Se o backend devolveu a nova URL do Cloudinary, atualizamos o estado
+      if (!res.ok) {
+        throw new Error(result.details || result.error || "Falha ao salvar");
+      }
+
       if (result.newAvatar) {
         setAvatarPreview(result.newAvatar);
         setFormData(prev => ({ ...prev, foto_url: result.newAvatar }));
       }
 
-      alert("Perfil atualizado com sucesso!");
-      
-      // router.refresh() ajuda a atualizar componentes de servidor (como a Navbar)
-      router.refresh();
+      alert("✅ Perfil atualizado com sucesso!");
+      router.refresh(); // Atualiza os dados da página (server components)
 
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Erro ao salvar as alterações. Verifique sua conexão.");
+      alert(`❌ Erro ao salvar: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -190,7 +206,7 @@ export default function SettingsPage() {
               <div className={styles.avatarSection}>
                 <div className={styles.avatarWrapper}>
                   <Avatar className={styles.avatar}>
-                    <AvatarImage src={avatarPreview} className="object-cover" />
+                    <AvatarImage src={avatarPreview || "/placeholder-user.jpg"} className="object-cover" />
                     <AvatarFallback className="text-3xl bg-slate-100">
                       {formData.nome ? formData.nome[0].toUpperCase() : <User />}
                     </AvatarFallback>
@@ -220,7 +236,7 @@ export default function SettingsPage() {
                 </div>
                 <div className={styles.contactItem}>
                   <GraduationCap className="w-4 h-4" />
-                  {formData.ano_escolar ? `${formData.ano_escolar} Ano` : "Ano não definido"}
+                  {formData.ano_escolar || "Ano não definido"}
                 </div>
                 {formData.morada && (
                   <div className={styles.contactItem}>
@@ -257,7 +273,8 @@ export default function SettingsPage() {
                     <div className={`${styles.formGrid} ${styles['cols-2']}`}>
                       <div className={styles.inputGroup}>
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" value={formData.email} onChange={handleChange} />
+                        <Input id="email" type="email" value={formData.email} onChange={handleChange} disabled />
+                        <p className="text-xs text-gray-500 mt-1">O email não pode ser alterado.</p>
                       </div>
                       <div className={styles.inputGroup}>
                         <Label htmlFor="telefone">Telefone</Label>
@@ -288,7 +305,7 @@ export default function SettingsPage() {
                           id="ano_escolar"
                           value={formData.ano_escolar}
                           onChange={handleChange}
-                          className={styles.customSelect}
+                          className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <option value="">Selecione...</option>
                           <option value="10º">10º Ano</option>
@@ -325,7 +342,7 @@ export default function SettingsPage() {
                       />
                     </div>
                     <div className={styles.inputGroup}>
-                      <Label htmlFor="interesses">Interesses (Separar por vírgulas)</Label>
+                      <Label htmlFor="interesses">Interesses</Label>
                       <Input
                         id="interesses"
                         value={formData.interesses}
