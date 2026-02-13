@@ -466,3 +466,42 @@ $primary-soft: rgba(16, 185, 129, 0.15); // Emerald transparente
     }
   }
 }
+
+/* --- 9. Utilitários de Visibilidade (Mobile vs Desktop) --- */
+/* Estas são as classes novas que fazem a troca de ecrã funcionar */
+
+/* Esconde elementos no mobile (ex: Sidebar quando chat aberto) */
+.hideMobile {
+  display: none !important;
+
+  @media (min-width: 768px) {
+    display: flex !important;
+  }
+}
+
+/* Botão de voltar (Seta) - Só aparece no Mobile */
+.backBtn {
+  background: none;
+  border: none;
+  color: $text-gray;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-right: 0.5rem; /* Espaço entre a seta e o avatar */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    color: $text-white;
+    background-color: rgba($bg-card-hover, 0.5);
+  }
+
+  /* No Desktop, a seta desaparece */
+  @media (min-width: 768px) {
+    display: none;
+  }
+}

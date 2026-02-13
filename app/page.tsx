@@ -8,7 +8,7 @@ export default function HomePage() {
     <div className={styles.homepage}>
       {/* Header */}
       <header className={styles.header}>
-        <div className={styles.container}> {/* AQUI É O SEGREDO: styles.container */}
+        <div className={styles.container}> 
           <div className={styles.headerContent}>
             <Link href="/" className={styles.logo}>
               <div className={styles.logoIcon}>
@@ -49,11 +49,6 @@ export default function HomePage() {
                 <Button size="lg" className={`${styles.btnPrimary} w-full sm:w-auto h-12 text-base`}>
                   Criar Conta Gratuita
                   <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Link href="/about">
-                <Button size="lg" variant="outline" className={`${styles.btnOutline} w-full sm:w-auto h-12 text-base`}>
-                  Como funciona?
                 </Button>
               </Link>
             </div>

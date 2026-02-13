@@ -267,5 +267,6 @@ export default function SearchPage() {
         </div>
       </footer>
     </div>
+    
   );
 }
