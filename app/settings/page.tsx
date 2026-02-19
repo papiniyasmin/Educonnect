@@ -285,10 +285,6 @@ export default function SettingsPage() {
             <Bell className="w-5 h-5" />
             <span>Chat</span>
           </Link>
-          <Link href="/settings" className={pathname === '/settings' ? styles.activeLink : ''}>
-            <Settings className="w-5 h-5" />
-            <span>Ajustes</span>
-          </Link>
         </div>
       </footer>
     </div>
