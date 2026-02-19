@@ -177,6 +177,7 @@ export default function ChatPage() {
             <div className={styles.logoIcon}>
               <BookOpen />
             </div>
+            <span>EduConnect</span>
           </Link>
 
           <nav className={styles.nav}>
