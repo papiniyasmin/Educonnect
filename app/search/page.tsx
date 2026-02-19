@@ -67,9 +67,10 @@ const PersonItem = ({ pessoa }: { pessoa: any }) => {
     >
       <div className="flex items-center gap-3 flex-1">
         <Avatar className={styles.avatarLarge}>
-          <AvatarImage src={pessoa.avatar || "/placeholder.svg"} />
+          {/* CORREÇÃO NA FOTO DAS PESSOAS */}
+          {(pessoa.foto_url || pessoa.avatar) && <AvatarImage src={pessoa.foto_url || pessoa.avatar} />}
           <AvatarFallback className="bg-emerald-600 text-white">
-            {pessoa.nome?.[0] || "U"}
+            {pessoa.nome?.[0]?.toUpperCase() || "U"}
           </AvatarFallback>
         </Avatar>
         <div className={styles.personInfo}>
@@ -174,9 +175,12 @@ export default function SearchPage() {
             <Link href="/search" className="text-blue-400"><Search className="w-5 h-5" /></Link>
             <Link href="/settings"><Settings className="w-5 h-5" /></Link>
             <Link href="/profile">
-              <Avatar className={styles.avatarSmall}>
-                <AvatarImage src={user?.foto_url} />
-                <AvatarFallback>{user?.nome?.[0] || "U"}</AvatarFallback>
+              {/* CORREÇÃO AQUI NO HEADER (Tamanho igual ao resto) */}
+              <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">
+                {(user?.foto_url || user?.avatar) && <AvatarImage src={user.foto_url || user.avatar} />}
+                <AvatarFallback className="bg-emerald-600 text-white text-xs">
+                  {user?.nome ? user.nome[0].toUpperCase() : "U"}
+                </AvatarFallback>
               </Avatar>
             </Link>
             <Link href="/login"><LogOut className="w-5 h-5" /></Link>

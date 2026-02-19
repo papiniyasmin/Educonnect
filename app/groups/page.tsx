@@ -82,12 +82,22 @@ export default function GroupsPage() {
     avatar: "" 
   });
 
-  // 1. Pegar usuário logado
+  // 1. Pegar usuário logado (LÊ FOTO_URL CORRETAMENTE)
   useEffect(() => {
     fetch("/api/user")
       .then(res => res.json())
-      .then(data => setUser(data.user || data))
-      .catch(() => setUser(null));
+      .then(data => {
+        const userData = data.user || data;
+        setUser({
+          id: userData.id,
+          name: userData.name || userData.nome, 
+          avatar: userData.foto_url || userData.avatar || "" 
+        });
+      })
+      .catch(err => {
+        console.error("Erro ao carregar user:", err);
+        setUser(null);
+      });
   }, []);
 
   // 2. Pegar grupos
@@ -228,9 +238,11 @@ export default function GroupsPage() {
                 <Link href="/search"><Search className="w-4 h-4 md:w-5 md:h-5" /></Link>
                 <Link href="/settings"><Settings className="w-4 h-4 md:w-5 md:h-5" /></Link>
                 <Link href="/profile">
-                    <Avatar className={styles.avatar}>
-                    <AvatarImage src={user?.avatar || ""} />
-                    <AvatarFallback>{user?.name ? user.name[0].toUpperCase() : 'U'}</AvatarFallback>
+                    <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">
+                        {user?.avatar && <AvatarImage src={user.avatar} />}
+                        <AvatarFallback className="bg-emerald-600 text-white text-xs">
+                            {user?.name ? user.name[0].toUpperCase() : 'U'}
+                        </AvatarFallback>
                     </Avatar>
                 </Link>
                 <Link href="/login"><LogOut className={`w-4 h-4 md:w-5 md:h-5 ${styles.logoutIcon}`} /></Link>

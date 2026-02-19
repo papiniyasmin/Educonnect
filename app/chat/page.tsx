@@ -68,8 +68,8 @@ export default function ChatPage() {
       .then(data => {
         setCurrentUser({
           id: data.id,
-          name: data.name,
-          avatar: data.avatar || null
+          name: data.name || data.nome, // Corrigido para aceitar nome ou name
+          avatar: data.foto_url || data.avatar || null // Corrigido para puxar foto_url!
         });
       })
       .catch(err => {
