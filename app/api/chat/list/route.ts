@@ -2,7 +2,6 @@ import { NextResponse, NextRequest } from "next/server";
 import pool from "@/db";
 import { getUserId } from "@/lib/auth"; 
 import { RowDataPacket } from "mysql2";
-export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {

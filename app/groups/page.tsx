@@ -82,16 +82,20 @@ export default function GroupsPage() {
     avatar: "" 
   });
 
-  // 1. Pegar usuário logado (LÊ FOTO_URL CORRETAMENTE)
+  // 1. Pegar usuário logado e a foto
   useEffect(() => {
     fetch("/api/user")
       .then(res => res.json())
       .then(data => {
         const userData = data.user || data;
+        
+        // Garante que o avatar é lido corretamente ou fica string vazia
+        const avatarUrl = userData.foto_url || userData.avatar || "";
+
         setUser({
           id: userData.id,
           name: userData.name || userData.nome, 
-          avatar: userData.foto_url || userData.avatar || "" 
+          avatar: avatarUrl 
         });
       })
       .catch(err => {
@@ -239,7 +243,10 @@ export default function GroupsPage() {
                 <Link href="/settings"><Settings className="w-4 h-4 md:w-5 md:h-5" /></Link>
                 <Link href="/profile">
                     <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">
-                        {user?.avatar && <AvatarImage src={user.avatar} />}
+                        {/* A foto de perfil aparece aqui! */}
+                        {user?.avatar ? (
+                          <AvatarImage src={user.avatar} className="object-cover" />
+                        ) : null}
                         <AvatarFallback className="bg-emerald-600 text-white text-xs">
                             {user?.name ? user.name[0].toUpperCase() : 'U'}
                         </AvatarFallback>
@@ -300,7 +307,7 @@ export default function GroupsPage() {
               <Card key={group.id} className={styles.groupCard}>
                 <CardHeader className={styles.cardHeader}>
                     <div className={`${styles.avatarBox} flex items-center justify-center bg-blue-600 rounded-md`}>
-                         {getGroupIcon(group.subject, group.name, group.avatar)}
+                          {getGroupIcon(group.subject, group.name, group.avatar)}
                     </div>
                     <div className={styles.headerInfo}>
                         <CardTitle className={styles.title}>{group.name}</CardTitle>

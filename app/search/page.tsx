@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 // Icons
 import { 
   BookOpen, Search, Settings, LogOut, 
-  Users, MessageCircle, UserPlus, Clock, Loader2, Check 
+  Users, MessageCircle, UserPlus, Clock, Loader2, Check, Bell 
 } from "lucide-react";
 
 import styles from "./searchPage.module.scss";
@@ -23,7 +23,6 @@ type TabType = "todos" | "grupos" | "pessoas";
 const PersonItem = ({ pessoa }: { pessoa: any }) => {
   const router = useRouter();
   
-  // Define o estado inicial com base no que vem da base de dados
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent' | 'friend'>(
     pessoa.estado_amizade === 'ACEITE' ? 'friend' :
     pessoa.estado_amizade === 'PENDENTE' ? 'sent' : 
@@ -31,28 +30,23 @@ const PersonItem = ({ pessoa }: { pessoa: any }) => {
   );
 
   const handleAddFriend = async (e: React.MouseEvent) => {
-    e.stopPropagation(); // Impede de abrir o perfil ao clicar no botão
-    
+    e.stopPropagation(); 
     if (status !== 'idle') return;
 
     setStatus('loading');
     try {
-      // POST para a API que cria o pedido
       const res = await fetch("/api/friends/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // IMPORTANTE: O nome da chave aqui deve ser targetUserId
         body: JSON.stringify({ targetUserId: pessoa.id }), 
       });
 
       if (res.ok) {
         setStatus('sent');
       } else if (res.status === 409) {
-        // Se der erro 409, significa que já existe pedido ou amizade
         setStatus('sent'); 
       } else {
-        setStatus('idle'); // Falhou, volta ao normal
-        console.error("Erro ao adicionar");
+        setStatus('idle');
       }
     } catch (error) {
       console.error("Erro de rede", error);
@@ -67,8 +61,10 @@ const PersonItem = ({ pessoa }: { pessoa: any }) => {
     >
       <div className="flex items-center gap-3 flex-1">
         <Avatar className={styles.avatarLarge}>
-          {/* CORREÇÃO NA FOTO DAS PESSOAS */}
-          {(pessoa.foto_url || pessoa.avatar) && <AvatarImage src={pessoa.foto_url || pessoa.avatar} />}
+          {/* Correção Anti-Erro: Ternário em vez de && */}
+          {pessoa.foto_url || pessoa.avatar ? (
+             <AvatarImage src={pessoa.foto_url || pessoa.avatar} />
+          ) : null}
           <AvatarFallback className="bg-emerald-600 text-white">
             {pessoa.nome?.[0]?.toUpperCase() || "U"}
           </AvatarFallback>
@@ -83,7 +79,6 @@ const PersonItem = ({ pessoa }: { pessoa: any }) => {
         onClick={handleAddFriend} 
         disabled={status !== 'idle'} 
         size="sm"
-        // Estilo condicional baseado no estado
         variant={status === 'idle' ? "default" : "ghost"}
         className={
           status === 'idle' ? "bg-blue-600 hover:bg-blue-700 text-white" : 
@@ -94,17 +89,11 @@ const PersonItem = ({ pessoa }: { pessoa: any }) => {
         {status === 'loading' ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : status === 'friend' ? (
-          <>
-            <Check className="w-4 h-4 mr-1" /> Amigos
-          </>
+          <><Check className="w-4 h-4 mr-1" /> Amigos</>
         ) : status === 'sent' ? (
-          <>
-            <Clock className="w-4 h-4 mr-1" /> Pendente
-          </>
+          <><Clock className="w-4 h-4 mr-1" /> Pendente</>
         ) : (
-          <>
-            <UserPlus className="w-4 h-4 mr-1" /> Adicionar
-          </>
+          <><UserPlus className="w-4 h-4 mr-1" /> Adicionar</>
         )}
       </Button>
     </div>
@@ -114,21 +103,20 @@ const PersonItem = ({ pessoa }: { pessoa: any }) => {
 // --- PÁGINA PRINCIPAL ---
 export default function SearchPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<TabType>("todos");
   const [results, setResults] = useState({ grupos: [], pessoas: [] });
   const [loadingSearch, setLoadingSearch] = useState(false);
 
-  // Buscar usuário logado
   useEffect(() => {
-    fetch("/api/user/settings") // Usa user/settings para garantir dados frescos
+    fetch("/api/user/settings")
       .then(res => res.json())
       .then(data => setUser(data))
       .catch(() => {});
   }, []);
 
-  // Busca com Debounce
   useEffect(() => {
     const delay = setTimeout(async () => {
       if (!searchQuery) {
@@ -157,7 +145,7 @@ export default function SearchPage() {
   return (
     <div className={styles.pageContainer}>
       
-      {/* HEADER */}
+      {/* HEADER (Desktop) */}
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <Link href="/" className={styles.logoLink}>
@@ -175,9 +163,10 @@ export default function SearchPage() {
             <Link href="/search" className="text-blue-400"><Search className="w-5 h-5" /></Link>
             <Link href="/settings"><Settings className="w-5 h-5" /></Link>
             <Link href="/profile">
-              {/* CORREÇÃO AQUI NO HEADER (Tamanho igual ao resto) */}
               <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">
-                {(user?.foto_url || user?.avatar) && <AvatarImage src={user.foto_url || user.avatar} />}
+                {user?.foto_url || user?.avatar ? (
+                  <AvatarImage src={user.foto_url || user.avatar} />
+                ) : null}
                 <AvatarFallback className="bg-emerald-600 text-white text-xs">
                   {user?.nome ? user.nome[0].toUpperCase() : "U"}
                 </AvatarFallback>
@@ -189,7 +178,6 @@ export default function SearchPage() {
       </header>
 
       <main className={styles.mainContent}>
-        {/* Search Input Section */}
         <div className={styles.searchSection}>
           <h2>Pesquisar</h2>
           <div className={styles.inputWrapper}>
@@ -204,7 +192,6 @@ export default function SearchPage() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className={styles.tabsContainer}>
           {[
             { tab: "todos", label: "Todos" },
@@ -223,12 +210,9 @@ export default function SearchPage() {
           ))}
         </div>
 
-        {/* Results Area */}
         <div className={styles.resultsList}>
-          
           {loadingSearch && <div className="text-center p-4 text-gray-400">A pesquisar...</div>}
 
-          {/* GRUPOS */}
           {(activeTab === "todos" || activeTab === "grupos") && results.grupos.map((grupo: any) => (
             <div key={grupo.id} className={styles.resultCard} onClick={() => router.push(`/groups/${grupo.id}`)}>
               <div className="flex items-center gap-3">
@@ -243,12 +227,10 @@ export default function SearchPage() {
             </div>
           ))}
 
-          {/* PESSOAS */}
           {(activeTab === "todos" || activeTab === "pessoas") && results.pessoas.map((pessoa: any) => (
             <PersonItem key={pessoa.id} pessoa={pessoa} />
           ))}
 
-          {/* Empty States */}
           {!loadingSearch && searchQuery && !hasResults && (
             <div className={styles.emptyState}>
               <Search className={styles.emptyIcon} />
@@ -265,12 +247,23 @@ export default function SearchPage() {
         </div>
       </main>
 
-      <footer className={styles.footer}>
-        <div className="container mx-auto px-4">
-          <p>&copy; 2025 EduConnect. Todos os direitos reservados.</p>
+      {/* FOOTER MOBILE NAV (Igual ao sistema de grupos e definições) */}
+      <footer className={styles.mobileNav}>
+        <div className={styles.navContent}>
+          <Link href="/dashboard" className={pathname === '/dashboard' ? styles.activeLink : ''}>
+            <BookOpen className="w-5 h-5" />
+            <span>Feed</span>
+          </Link>
+          <Link href="/groups" className={pathname === '/groups' ? styles.activeLink : ''}>
+            <Users className="w-5 h-5" />
+            <span>Grupos</span>
+          </Link>
+          <Link href="/chat" className={pathname === '/chat' ? styles.activeLink : ''}>
+            <Bell className="w-5 h-5" />
+            <span>Chat</span>
+          </Link>
         </div>
       </footer>
     </div>
-    
   );
 }

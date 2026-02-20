@@ -25,7 +25,7 @@ function getUserIdFromToken() {
   }
 }
 
-// GET (Mantém igual, só para garantir que tem o ficheiro completo)
+// GET: CORRIGIDO! Agora pede o "u.id" logo no início do SELECT
 export async function GET() {
   let connection;
   try {
@@ -34,7 +34,7 @@ export async function GET() {
 
     connection = await pool.getConnection();
     const query = `
-      SELECT u.nome, u.email, u.ano_escolar, u.curso, u.foto_url, u.telefone, u.morada,
+      SELECT u.id, u.nome, u.email, u.ano_escolar, u.curso, u.foto_url, u.telefone, u.morada,
              i.bio, i.interesses, i.habilidades
       FROM utilizador u
       LEFT JOIN info i ON u.id = i.id_aluno 
@@ -57,7 +57,7 @@ export async function GET() {
   }
 }
 
-// PUT (CORRIGIDO PARA O ERRO 'DATA TRUNCATED')
+// PUT: MANTIDO EXATAMENTE IGUAL AO TEU
 export async function PUT(req: Request) {
   let connection;
   try {
@@ -112,7 +112,7 @@ export async function PUT(req: Request) {
     await connection.beginTransaction();
 
     try {
-      // 2. Update Tabela UTILIZADOR
+
       let qUser = "UPDATE utilizador SET nome=?, email=?, ano_escolar=?, curso=?, telefone=?, morada=?";
       const pUser = [nome, email, ano_escolar, curso, telefone, morada];
       
@@ -125,7 +125,6 @@ export async function PUT(req: Request) {
       
       await connection.execute(qUser, pUser);
 
-      // 3. Update Tabela INFO
       const [exists]: any = await connection.execute("SELECT id FROM info WHERE id_aluno = ?", [userId]);
       
       if (exists.length > 0) {
@@ -134,8 +133,7 @@ export async function PUT(req: Request) {
           [bio, interesses, habilidades, userId]
         );
       } else {
-        // Inserção segura: o BD exige email na tabela info também?
-        // Baseado no seu SQL, a tabela info tem a coluna 'email' NOT NULL.
+        
         await connection.execute(
           `INSERT INTO info (id_aluno, aluno_id, bio, interesses, habilidades, email, data_atualização) 
            VALUES (?, ?, ?, ?, ?, ?, NOW())`,
@@ -148,7 +146,7 @@ export async function PUT(req: Request) {
 
     } catch (err: any) {
       await connection.rollback();
-      console.error("ERRO SQL:", err); // Log detalhado na Vercel
+      console.error("ERRO SQL:", err); 
       throw err;
     }
 

@@ -61,6 +61,14 @@ export default function SettingsPage() {
         if (!res.ok) throw new Error("Erro ao carregar dados");
 
         const data = await res.json();
+        
+        // Lógica para tratar o caminho da foto corretamente
+        const fetchedFotoUrl = data.foto_url 
+          ? (data.foto_url.startsWith("http") || data.foto_url.startsWith("data:")) 
+            ? data.foto_url 
+            : `/uploads/${data.foto_url}`
+          : "";
+
         setFormData({
           nome: data.nome || "",
           email: data.email || "",
@@ -71,9 +79,12 @@ export default function SettingsPage() {
           bio: data.bio || "",
           interesses: data.interesses || "",
           habilidades: data.habilidades || "",
-          foto_url: data.foto_url || ""
+          foto_url: fetchedFotoUrl
         });
-        if (data.foto_url) setAvatarPreview(data.foto_url);
+
+        // Atualiza o preview com a foto carregada da base de dados
+        if (fetchedFotoUrl) setAvatarPreview(fetchedFotoUrl);
+
       } catch (err) {
         console.error(err);
       } finally {
@@ -95,6 +106,7 @@ export default function SettingsPage() {
         return;
       }
       setSelectedFile(file);
+      // Cria um URL temporário para mostrar a foto mal seja escolhida
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
@@ -151,7 +163,8 @@ export default function SettingsPage() {
             <Link href="/settings" className="text-emerald-400"><Settings className="w-5 h-5" /></Link>
             <Link href="/profile">
               <Avatar className="w-8 h-8 border border-slate-700">
-                {avatarPreview ? <AvatarImage src={avatarPreview} /> : null}
+                {/* Imagem no Header */}
+                {avatarPreview ? <AvatarImage src={avatarPreview} className="object-cover" /> : null}
                 <AvatarFallback className="bg-emerald-600 text-white text-xs">
                   {formData.nome ? formData.nome[0].toUpperCase() : "U"}
                 </AvatarFallback>
@@ -186,6 +199,7 @@ export default function SettingsPage() {
                 <div className={styles.avatarSection}>
                   <div className={styles.avatarWrapper}>
                     <Avatar className={styles.avatar}>
+                      {/* Imagem Principal de Edição */}
                       {avatarPreview ? <AvatarImage src={avatarPreview} className="object-cover" /> : null}
                       <AvatarFallback className="text-3xl bg-emerald-600 text-white">
                         {formData.nome ? formData.nome[0].toUpperCase() : <User />}
@@ -270,7 +284,7 @@ export default function SettingsPage() {
         </div>
       </main>
 
-      {/* FOOTER MOBILE NAV (Igual ao Groups) */}
+      {/* FOOTER MOBILE NAV */}
       <footer className={styles.mobileNav}>
         <div className={styles.navContent}>
           <Link href="/dashboard" className={pathname === '/dashboard' ? styles.activeLink : ''}>
