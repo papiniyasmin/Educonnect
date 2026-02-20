@@ -89,6 +89,9 @@ export default function ProfilePage() {
   const userCurso = (user as any).curso || "Geral";
   const userAno = (user as any).ano_escolar || "12º";
 
+  // --- CORREÇÃO DA IMAGEM AQUI ---
+  const userAvatar = (user as any).foto_url || (user as any).avatar || "";
+
   return (
     <div className={styles.pageContainer}>
 
@@ -114,7 +117,10 @@ export default function ProfilePage() {
             
             <Link href="/profile">
               <Avatar className={styles.avatarSmall}>
-                <AvatarImage src={user.avatar || undefined} />
+                {/* Imagem do Header corrigida */}
+                {userAvatar ? (
+                   <AvatarImage src={userAvatar} className="object-cover" />
+                ) : null}
                 <AvatarFallback className="bg-emerald-600 text-white">
                   {user.name?.[0] || "U"}
                 </AvatarFallback>
@@ -134,9 +140,12 @@ export default function ProfilePage() {
           <CardContent className="pt-6">
             <div className={styles.profileContent}>
               
-              {/* Avatar */}
+              {/* Avatar Principal */}
               <Avatar className={styles.largeAvatar}>
-                <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name || "User"} />
+                {/* Imagem Principal corrigida */}
+                {userAvatar ? (
+                   <AvatarImage src={userAvatar} alt={user.name || "User"} className="object-cover" />
+                ) : null}
                 <AvatarFallback className="bg-emerald-600 text-white text-4xl">
                   {user.name?.[0] || "U"}
                 </AvatarFallback>
