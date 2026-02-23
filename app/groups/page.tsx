@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { 
-  BookOpen, Search, Settings, LogOut, Users, Plus, Filter, MessageCircle, X, Bell,
+  BookOpen, Search, Settings, LogOut, Users, Plus, Filter, MessageCircle, X, Bell,UserPlus,
   Calculator, Atom, Dna, Globe, BookType, Code, FlaskConical, Palette, Music, Landmark, BrainCircuit, Dumbbell
 } from "lucide-react";
 
@@ -240,6 +240,7 @@ export default function GroupsPage() {
 
             <div className={styles.userActions}>
                 <Link href="/search"><Search className="w-4 h-4 md:w-5 md:h-5" /></Link>
+                 <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
                 <Link href="/settings"><Settings className="w-4 h-4 md:w-5 md:h-5" /></Link>
                 <Link href="/profile">
                     <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">

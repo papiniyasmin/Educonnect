@@ -4,10 +4,10 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card, CardHeader, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { BookOpen, LogOut, Search, Settings, Bell, UserPlus } from "lucide-react"
+// Atualizei os ícones aqui para incluir Users e UserIcon
+import { BookOpen, LogOut, Search, Settings, Bell, UserPlus, Users, User as UserIcon } from "lucide-react"
 import CreatePostModal from "@/components/create-post-modal"
 import PostCard from "@/components/post-card"
-import ChatBubble from "@/components/chat-bubble"
 import styles from "./dashboard.module.scss"
 
 // --- Interfaces ---
@@ -243,6 +243,7 @@ export default function DashboardPage() {
         </section>
       </main>
 
+      {/* MOBILE NAV ATUALIZADO */}
       <footer className={styles.mobileNav}>
         <div className={styles.navContent}>
           <Link href="/dashboard" className={styles.activeLink}>
@@ -250,12 +251,16 @@ export default function DashboardPage() {
             <span>Feed</span>
           </Link>
           <Link href="/groups">
-            <BookOpen className="w-5 h-5" />
+            <Users className="w-5 h-5" />
             <span>Grupos</span>
           </Link>
           <Link href="/chat">
             <Bell className="w-5 h-5" />
             <span>Chat</span>
+          </Link>
+          <Link href="/profile">
+            <UserIcon className="w-5 h-5" />
+            <span>Perfil</span>
           </Link>
         </div>
       </footer>

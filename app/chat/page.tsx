@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { 
   Send, MessageCircle, Users, BookOpen, LogOut,
-  Search, Settings, Bell, ChevronLeft
+  Search, Settings, Bell, ChevronLeft,UserPlus
 } from "lucide-react";
 import styles from "./chat.module.scss";
 
@@ -169,6 +169,7 @@ export default function ChatPage() {
           </nav>
           <div className={styles.actions}>
             <Link href="/search"><Search /></Link>
+            <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
             <Link href="/settings"><Settings /></Link>
             <Link href="/profile">
               <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">

@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // Icons
 import {
   User, BookOpen, GraduationCap, MapPin,
-  Mail, Camera, Save, Loader2, Sparkles, Search, Settings, LogOut, Users, Bell
+  Mail, Camera, Save, Loader2, Sparkles, Search, Settings, LogOut, Users, Bell,UserPlus
 } from "lucide-react";
 
 // Styles
@@ -160,6 +160,7 @@ export default function SettingsPage() {
           </nav>
           <div className={styles.userActions}>
             <Link href="/search"><Search className="w-5 h-5" /></Link>
+            <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
             <Link href="/settings" className="text-emerald-400"><Settings className="w-5 h-5" /></Link>
             <Link href="/profile">
               <Avatar className="w-8 h-8 border border-slate-700">

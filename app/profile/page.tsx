@@ -11,10 +11,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// Icons
+// Icons (Atualizados para incluir os do menu mobile)
 import {
-  BookOpen, Search, Settings, LogOut, Mail, Calendar,
-  GraduationCap, Award, FileText, Users
+  BookOpen, Search,UserPlus, Settings, LogOut, Mail, Calendar,
+  GraduationCap, Award, FileText, Users, Bell, User as UserIcon
 } from "lucide-react";
 
 // Styles
@@ -89,13 +89,13 @@ export default function ProfilePage() {
   const userCurso = (user as any).curso || "Geral";
   const userAno = (user as any).ano_escolar || "12º";
 
-  // --- CORREÇÃO DA IMAGEM AQUI ---
+  // Correção da imagem
   const userAvatar = (user as any).foto_url || (user as any).avatar || "";
 
   return (
     <div className={styles.pageContainer}>
 
-      {/* HEADER */}
+      {/* HEADER TOP (Desktop & Mobile) */}
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <Link href="/" className={styles.logoLink}>
@@ -113,11 +113,11 @@ export default function ProfilePage() {
 
           <div className={styles.userActions}>
             <Link href="/search"><Search className="w-5 h-5" /></Link>
+            <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
             <Link href="/settings"><Settings className="w-5 h-5" /></Link>
             
             <Link href="/profile">
               <Avatar className={styles.avatarSmall}>
-                {/* Imagem do Header corrigida */}
                 {userAvatar ? (
                    <AvatarImage src={userAvatar} className="object-cover" />
                 ) : null}
@@ -142,7 +142,6 @@ export default function ProfilePage() {
               
               {/* Avatar Principal */}
               <Avatar className={styles.largeAvatar}>
-                {/* Imagem Principal corrigida */}
                 {userAvatar ? (
                    <AvatarImage src={userAvatar} alt={user.name || "User"} className="object-cover" />
                 ) : null}
@@ -265,10 +264,28 @@ export default function ProfilePage() {
 
       </main>
 
-      {/* FOOTER */}
-      <footer className={styles.footer}>
+      {/* FOOTER DESKTOP */}
+      <footer className={styles.footerDesktop}>
         <div className="container mx-auto px-4">
           <p>&copy; 2026 EduConnect. Todos os direitos reservados.</p>
+        </div>
+      </footer>
+
+      {/* FOOTER MOBILE NAV (Igual ao GroupsPage) */}
+      <footer className={styles.mobileNav}>
+        <div className={styles.navContent}>
+          <Link href="/dashboard">
+            <BookOpen className="w-5 h-5" />
+            <span>Feed</span>
+          </Link>
+          <Link href="/groups">
+            <Users className="w-5 h-5" />
+            <span>Grupos</span>
+          </Link>
+          <Link href="/chat">
+            <Bell className="w-5 h-5" />
+            <span>Chat</span>
+          </Link>
         </div>
       </footer>
 

@@ -70,8 +70,7 @@ $lg: 1024px;
     span {
       font-size: 1.125rem;
       font-weight: 700;
-      display: none;
-      @media (min-width: $md) { display: block; }
+      display: block; /* Removido o display: none para aparecer no mobile! */
     }
   }
 
@@ -157,7 +156,7 @@ $lg: 1024px;
   .navContent {
     max-width: 80rem;
     margin: 0 auto;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 0;
     display: flex;
     align-items: center;
     justify-content: space-around; /* Space-around fica melhor no mobile */
@@ -167,10 +166,11 @@ $lg: 1024px;
       flex-direction: column;
       align-items: center;
       text-decoration: none;
-      color: $text-light;
+      color: $text-gray;
+      flex: 1;
       
-      span { font-size: 0.75rem; margin-top: 2px; }
-      &:hover { color: white; }
+      span { font-size: 0.75rem; margin-top: 4px; font-weight: 500; }
+      &:hover { color: $text-light; }
     }
 
     .activeLink { color: $primary; }

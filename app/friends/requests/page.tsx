@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input" // Certifique-se que tem este componente ou use input normal
-import { BookOpen, LogOut, Search, Settings, Check, X, UserPlus, Bell } from "lucide-react"
+import { Input } from "@/components/ui/input" 
+// Adicionei 'Users' e 'UserIcon' para o footer mobile!
+import { BookOpen, LogOut, Search, Settings, Check, X, UserPlus, Bell, Users, User as UserIcon } from "lucide-react"
 
 import styles from "./friendRequests.module.scss"
 
@@ -31,11 +32,8 @@ export default function FriendRequestsPage() {
   const [requests, setRequests] = useState<FriendRequest[]>([])
   const [loadingUser, setLoadingUser] = useState(true)
   const [loadingRequests, setLoadingRequests] = useState(true)
-
-  // Estado para adicionar amigo manualmente (TESTE)
   const [addId, setAddId] = useState("")
 
-  // 1. CARREGAR O UTILIZADOR
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -59,10 +57,8 @@ export default function FriendRequestsPage() {
     loadUser()
   }, [])
 
-  // 2. CARREGAR OS PEDIDOS (GET)
   const fetchRequests = async () => {
     try {
-      // CORREÇÃO: Agora aponta para 'request' no singular, onde está o nosso GET
       const res = await fetch("/api/friends/request")
       if (res.ok) {
         const data = await res.json()
@@ -79,9 +75,7 @@ export default function FriendRequestsPage() {
     fetchRequests()
   }, [])
 
-  // 3. AÇÃO DE ACEITAR/RECUSAR
   const handleResponse = async (requestId: number, action: 'accept' | 'reject') => {
-    // Atualização Otimista (Remove da lista visualmente logo)
     setRequests(prev => prev.filter(req => req.id !== requestId))
 
     try {
@@ -91,14 +85,11 @@ export default function FriendRequestsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requestId })
       })
-      // Opcional: Recarregar lista para garantir
-      // fetchRequests() 
     } catch (error) {
       alert("Erro ao processar.")
     }
   }
 
-  // 4. FUNÇÃO PARA ADICIONAR AMIGO (TESTE)
   const handleAddFriend = async () => {
     if (!addId) return;
     try {
@@ -132,8 +123,10 @@ export default function FriendRequestsPage() {
       {/* --- HEADER --- */}
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link href="/" className={styles.logoArea}>
-            <div className={styles.logoIcon}><BookOpen size={20} /></div>
+          <Link href="/" className={styles.logoLink}>
+            <div className={styles.logoBox}>
+                <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
+            </div>
             <span>EduConnect</span>
           </Link>
 
@@ -145,7 +138,6 @@ export default function FriendRequestsPage() {
 
           <div className={styles.actions}>
             <Link href="/search"><Search size={20} /></Link>
-            
             <Link href="/friends" className={styles.activeIcon}>
                <UserPlus size={20} />
                {requests.length > 0 && <span className={styles.badge}></span>}
@@ -242,8 +234,30 @@ export default function FriendRequestsPage() {
                 </div>
             )}
           </section>
-
       </main>
+
+      {/* --- FOOTER MOBILE (Adicionado aqui!) --- */}
+      <footer className={styles.mobileNav}>
+        <div className={styles.navContent}>
+          <Link href="/dashboard">
+            <BookOpen className="w-5 h-5" />
+            <span>Feed</span>
+          </Link>
+          <Link href="/groups">
+            <Users className="w-5 h-5" />
+            <span>Grupos</span>
+          </Link>
+          <Link href="/chat">
+            <Bell className="w-5 h-5" />
+            <span>Chat</span>
+          </Link>
+          <Link href="/profile">
+            <UserIcon className="w-5 h-5" />
+            <span>Perfil</span>
+          </Link>
+        </div>
+      </footer>
+
     </div>
   )
 }
