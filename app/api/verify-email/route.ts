@@ -29,7 +29,7 @@ export async function GET(req: Request) {
       [userId]
     );
 
-    // Redirecionar para a página de login
+
     return NextResponse.redirect(`${reqUrl.origin}/login?verified=true`);
 
   } catch (error) {
