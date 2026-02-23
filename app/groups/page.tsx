@@ -142,17 +142,26 @@ export default function GroupsPage() {
     loadGroups();
   }, [user]);
 
-  // Lógica de Entrar no Grupo
+  // Lógica de Entrar no Grupo ATUALIZADA
   const handleJoinGroup = async (groupId: number, currentlyJoined: boolean) => {
     if (!user) return;
     setJoining(groupId);
 
     try {
-      await fetch("/api/groups/join", {
+      const res = await fetch("/api/groups/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ groupId, join: !currentlyJoined, userId: user.id }),
       });
+
+      // NOVO: Verifica se o backend deu erro antes de mudar a cor do botão
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("Erro do servidor:", errorData);
+        alert("Ocorreu um erro ao tentar entrar no grupo. Vê a consola do VS Code.");
+        setJoining(null);
+        return; 
+      }
 
       setGroups(prev =>
         prev.map(g => g.id === groupId ? { ...g, isJoined: !currentlyJoined, memberCount: currentlyJoined ? g.memberCount - 1 : g.memberCount + 1 } : g)
