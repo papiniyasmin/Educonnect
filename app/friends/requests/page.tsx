@@ -251,10 +251,6 @@ export default function FriendRequestsPage() {
             <Bell className="w-5 h-5" />
             <span>Chat</span>
           </Link>
-          <Link href="/profile">
-            <UserIcon className="w-5 h-5" />
-            <span>Perfil</span>
-          </Link>
         </div>
       </footer>
 
