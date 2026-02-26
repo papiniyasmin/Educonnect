@@ -1,4 +1,6 @@
-/* --- Variáveis (Igual ao Groups) --- */
+/* =========================================
+   VARIÁVEIS E MIXINS
+   ========================================= */
 $bg-dark: #0f172a;       // slate-900
 $bg-card: #1e293b;       // slate-800
 $bg-card-hover: #334155; // slate-700
@@ -23,6 +25,9 @@ $lg: 1024px;
   justify-content: center;
 }
 
+/* =========================================
+   LAYOUT PRINCIPAL
+   ========================================= */
 .container {
   min-height: 100vh;
   background-color: $bg-dark;
@@ -31,7 +36,9 @@ $lg: 1024px;
   flex-direction: column;
 }
 
-/* --- HEADER --- */
+/* =========================================
+   HEADER
+   ========================================= */
 .header {
   position: sticky;
   top: 0;
@@ -41,7 +48,7 @@ $lg: 1024px;
   backdrop-filter: blur(8px);
 
   .headerInner {
-    max-width: 80rem; // 7xl
+    max-width: 80rem; 
     margin: 0 auto;
     padding: 0.75rem 1rem;
     display: flex;
@@ -57,6 +64,17 @@ $lg: 1024px;
     color: white;
     cursor: pointer;
 
+    .logoImage {
+      height: 0.875rem; 
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.07));
+      
+      @media (min-width: $md) {
+        height: 1rem; 
+      }
+    }
+
     .logoBox {
       width: 2rem;       
       height: 2rem;      
@@ -70,7 +88,7 @@ $lg: 1024px;
     span {
       font-size: 1.125rem;
       font-weight: 700;
-      display: block; /* Removido o display: none para aparecer no mobile! */
+      display: block; 
     }
   }
 
@@ -105,18 +123,30 @@ $lg: 1024px;
       width: 2rem;
       height: 2rem;
     }
+
+    .icon {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    .logoutIcon {
+      width: 1.25rem;
+      height: 1.25rem;
+      transition: color 0.2s;
+      &:hover { color: #f87171; }
+    }
   }
 }
 
-/* --- MAIN CONTENT (Modificado para centrar) --- */
+/* =========================================
+   ÁREA CENTRAL (MAIN & FEED)
+   ========================================= */
 .main {
   flex: 1;
   width: 100%;
   margin: 0 auto;
   padding: 1.5rem 1rem;
-  padding-bottom: 6rem; // Espaço para menu mobile
-
-  /* Flexbox para centrar o feed verticalmente e horizontalmente */
+  padding-bottom: 6rem; // Espaço para o menu mobile
   display: flex;
   flex-direction: column;
   align-items: center; 
@@ -124,23 +154,190 @@ $lg: 1024px;
   @media (min-width: $md) { padding-bottom: 1.5rem; }
 }
 
-/* --- FEED (Modificado para largura responsiva) --- */
 .feed {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  
   width: 100%;
-  
-  /* Define uma largura máxima para leitura confortável em monitores grandes.
-     Sem isso, o texto ficaria muito esticado em telas largas.
-     42rem (aprox 672px) é o padrão de redes sociais (ex: Twitter).
-     Podes aumentar para 50rem ou 60rem se quiseres mais largo.
-  */
-  max-width: 42rem; 
+  max-width: 42rem; // Largura agradável para leitura
 }
 
-/* --- MOBILE FOOTER NAV --- */
+.postsList {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.postWrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* =========================================
+   MENU DE OPÇÕES (3 PONTINHOS) E DROPDOWN
+   ========================================= */
+.optionsMenu {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+
+  .dotsBtn {
+    background: transparent;
+    border: none;
+    color: $text-gray;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: rgba($bg-card-hover, 0.8);
+      color: $text-white;
+    }
+  }
+
+  .dropdown {
+    position: absolute;
+    right: 0;
+    top: 2.5rem;
+    background-color: $bg-card;
+    border: 1px solid $border;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    min-width: 140px;
+    animation: fadeIn 0.15s ease-out;
+
+    /* Estilos base para os botões dentro do dropdown */
+    button {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: transparent;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .editMenuBtn {
+      color: $text-light;
+      &:hover {
+        background-color: rgba($bg-card-hover, 0.5);
+        color: $text-white;
+      }
+    }
+
+    .deleteBtn {
+      color: #f87171; // Vermelho suave
+      border-top: 1px solid rgba($border, 0.5);
+      &:hover {
+        background-color: rgba(248, 113, 113, 0.1);
+      }
+    }
+  }
+}
+
+/* =========================================
+   FORMULÁRIO DE EDIÇÃO DO POST
+   ========================================= */
+.editForm {
+  background-color: $bg-card;
+  border: 1px solid $primary; // Borda de destaque para modo edição
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  .editInput {
+    width: 100%;
+    min-height: 100px;
+    background-color: rgba($bg-dark, 0.5);
+    border: 1px solid $border;
+    border-radius: 0.5rem;
+    color: $text-white;
+    padding: 1rem;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: $primary;
+    }
+  }
+
+  .editActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+
+    button {
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .cancelBtn {
+      background-color: transparent;
+      color: $text-light;
+      border: 1px solid $border;
+
+      &:hover {
+        background-color: rgba($bg-card-hover, 0.5);
+        color: $text-white;
+      }
+    }
+
+    .saveBtn {
+      background-color: $primary;
+      color: white;
+
+      &:hover {
+        background-color: $primary-hover;
+      }
+    }
+  }
+}
+
+/* =========================================
+   ESTADOS (LOADING, ERRO)
+   ========================================= */
+.loadingState, .errorState {
+  height: 100vh;
+  width: 100%;
+  @include flex-center;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: $bg-dark;
+  color: $text-white;
+
+  a {
+    color: $primary;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+}
+
+/* =========================================
+   MOBILE NAVBAR (RODAPÉ)
+   ========================================= */
 .mobileNav {
   position: fixed;
   bottom: 0;
@@ -159,7 +356,7 @@ $lg: 1024px;
     padding: 0.75rem 0;
     display: flex;
     align-items: center;
-    justify-content: space-around; /* Space-around fica melhor no mobile */
+    justify-content: space-around;
 
     a {
       display: flex;
@@ -175,4 +372,12 @@ $lg: 1024px;
 
     .activeLink { color: $primary; }
   }
+}
+
+/* =========================================
+   ANIMAÇÕES GLOBAIS
+   ========================================= */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }

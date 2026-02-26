@@ -34,6 +34,7 @@ $primary-hover: #059669; // emerald-600
   margin: 0 auto;
   padding: 2rem 1rem;
   flex: 1;
+  padding-bottom: 5rem; // Espaço para não tapar o último resultado no mobile
 }
 
 /* --- Header (Padronizado) --- */
@@ -60,6 +61,22 @@ $primary-hover: #059669; // emerald-600
     gap: 0.5rem;
     text-decoration: none;
     color: white;
+    transition: opacity 0.2s;
+
+    &:hover { opacity: 0.8; }
+
+    /* NOVA CLASSE PARA O LOGÓTIPO MICROSCÓPICO */
+    .logoImage {
+      height: 0.875rem; /* Muito pequeno para mobile (aprox 14px) */
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.07));
+      
+      /* Ecrãs de computador */
+      @media (min-width: 768px) {
+        height: 1rem; /* Equivalente a 16px no desktop */
+      }
+    }
 
     .logoIcon {
       width: 2rem;
@@ -276,8 +293,4 @@ $primary-hover: #059669; // emerald-600
       }
     }
   }
-}
-
-.mainContent {
-  padding-bottom: 5rem; // Espaço para não tapar o último resultado no mobile
 }

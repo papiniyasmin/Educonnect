@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image"; // <-- IMPORT ADICIONADO AQUI
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookOpen, Mail, Lock, User, ArrowLeft, AlertCircle, MailCheck } from "lucide-react";
+import { Mail, Lock, User, ArrowLeft, AlertCircle, MailCheck } from "lucide-react"; // Removi o BookOpen daqui
 import styles from "./registerPage.module.scss";
 
 export default function RegisterPage() {
@@ -25,7 +26,7 @@ export default function RegisterPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false); // NOVO ESTADO: Controla a mensagem de sucesso
+  const [isSuccess, setIsSuccess] = useState(false); 
 
   // ---------------------------------------------------------
   // 1. VALIDAÇÕES
@@ -87,9 +88,6 @@ export default function RegisterPage() {
     }
 
     try {
-      // ---------------------------------------------
-      // PASSO 1: CRIAR A CONTA (O backend deverá enviar o email aqui)
-      // ---------------------------------------------
       const resRegister = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -108,7 +106,6 @@ export default function RegisterPage() {
         throw new Error(dataRegister.error || "Erro ao criar conta.");
       }
 
-      // PASSO 2: Mostrar mensagem de sucesso em vez de fazer auto-login
       setIsSuccess(true);
       
     } catch (err: any) {
@@ -130,16 +127,20 @@ export default function RegisterPage() {
           </Link>
 
           <div className={styles.logoWrapper}>
-            <div className={styles.logoIcon}>
-              <BookOpen className="text-white w-6 h-6" />
-            </div>
-            <h1>EduConnect</h1>
+            {/* --- LOGO ALTERADA AQUI --- */}
+            <Image 
+              src="/logo.png" 
+              alt="Logo EduConnect" 
+              width={150} 
+              height={45} 
+              className="object-contain" 
+            />
+           
           </div>
           <p className={styles.subtitle}>Crie sua conta de estudante</p>
         </div>
 
         <Card className={styles.registerCard}>
-          {/* Se registrou com sucesso, mostra esta mensagem */}
           {isSuccess ? (
             <CardContent className="flex flex-col items-center justify-center text-center py-10">
               <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image" ;
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -234,12 +235,16 @@ export default function GroupsPage() {
       {/* HEADER */}
       <header className={styles.header}>
         <div className={styles.headerContent}>
-            <Link href="/" className={styles.logoLink}>
-            <div className={styles.logoBox}>
-                <BookOpen className="w-5 h-5" />
-            </div>
-            <span>EduConnect</span>
-            </Link>
+             <Link href="/" className={styles.logoLink}>
+                      <Image 
+                        src="/logo.png" 
+                        alt="Logo EduConnect" 
+                        width={160} // Dimensão base para a qualidade
+                        height={40} // Dimensão base para a qualidade
+                        priority
+                        className={styles.logoImage} // A classe que criámos no SCSS
+                      />
+                    </Link>
             
             <nav className={styles.nav}>
                 <Link href="/dashboard">Feed</Link>

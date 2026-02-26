@@ -50,6 +50,19 @@ $lg: 1024px;
 
     &:hover { opacity: 0.8; }
 
+    /* NOVA CLASSE PARA O LOGÓTIPO MICROSCÓPICO */
+    .logoImage {
+      height: 0.875rem; /* Muito pequeno para mobile (aprox 14px) */
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.07));
+      
+      /* Ecrãs de computador */
+      @media (min-width: $md) {
+        height: 1rem; /* Equivalente a 16px no desktop */
+      }
+    }
+
     .logoBox {
       width: 2rem;
       height: 2rem;

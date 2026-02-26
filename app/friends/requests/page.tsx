@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image" 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input" 
@@ -123,12 +124,17 @@ export default function FriendRequestsPage() {
       {/* --- HEADER --- */}
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link href="/" className={styles.logoLink}>
-            <div className={styles.logoBox}>
-                <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
-            </div>
-            <span>EduConnect</span>
-          </Link>
+          {/* LOGO AGORA CONTROLADA TOTALMENTE PELO SCSS */}
+                    <Link href="/" className={styles.logoLink}>
+                      <Image 
+                        src="/logo.png" 
+                        alt="Logo EduConnect" 
+                        width={160} // Dimensão base para a qualidade
+                        height={40} // Dimensão base para a qualidade
+                        priority
+                        className={styles.logoImage} // A classe que criámos no SCSS
+                      />
+                    </Link>
 
           <nav className={styles.desktopNav}>
             <Link href="/dashboard">Feed</Link>

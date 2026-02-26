@@ -4,6 +4,7 @@ import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image" ;
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -99,11 +100,15 @@ export default function ProfilePage() {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <Link href="/" className={styles.logoLink}>
-            <div className={styles.logoIcon}>
-              <BookOpen className="w-5 h-5 text-white" />
-            </div>
-            <span>EduConnect</span>
-          </Link>
+                      <Image 
+                        src="/logo.png" 
+                        alt="Logo EduConnect" 
+                        width={160} // Dimensão base para a qualidade
+                        height={40} // Dimensão base para a qualidade
+                        priority
+                        className={styles.logoImage} // A classe que criámos no SCSS
+                      />
+                    </Link>
 
           <nav className={styles.nav}>
             <Link href="/dashboard">Feed</Link>

@@ -84,6 +84,22 @@ $md: 768px;
     gap: 0.5rem;
     text-decoration: none;
     color: white;
+    transition: opacity 0.2s;
+
+    &:hover { opacity: 0.8; }
+
+    /* NOVA CLASSE PARA O LOGÓTIPO MICROSCÓPICO */
+    .logoImage {
+      height: 0.875rem; /* Muito pequeno para mobile (aprox 14px) */
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.07));
+      
+      /* Ecrãs de computador */
+      @media (min-width: $md) {
+        height: 1rem; /* Equivalente a 16px no desktop */
+      }
+    }
 
     .logoIcon {
       width: 2rem;
@@ -92,7 +108,12 @@ $md: 768px;
       border-radius: 0.5rem;
       @include flex-center;
     }
-    span { font-size: 1.125rem; font-weight: 700; }
+    
+    span { 
+      font-size: 1.125rem; 
+      font-weight: 700; 
+      display: block; 
+    }
   }
 
   .nav {

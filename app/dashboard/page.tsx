@@ -1,16 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import Image from "next/image" 
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-// Atualizei os ícones aqui para incluir Users e UserIcon
-import { BookOpen, LogOut, Search, Settings, Bell, UserPlus, Users, User as UserIcon } from "lucide-react"
+import { 
+  BookOpen, LogOut, Search, Settings, Bell, 
+  UserPlus, Users, MoreHorizontal, Trash2, Edit2 
+} from "lucide-react"
 import CreatePostModal from "@/components/create-post-modal"
 import PostCard from "@/components/post-card"
+
+// CORREÇÃO: Certifique-se que o nome do ficheiro na pasta é dashboard.module.scss
 import styles from "./dashboard.module.scss"
 
-// --- Interfaces ---
 interface User {
   id: number
   name: string
@@ -36,230 +39,216 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeMenu, setActiveMenu] = useState<number | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+  const [editingPostId, setEditingPostId] = useState<number | null>(null)
+  const [editContent, setEditContent] = useState<string>("")
 
-  // 1. CARREGAR UTILIZADOR
   useEffect(() => {
-    const loadUser = async () => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setActiveMenu(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const loadData = async () => {
       try {
-        const res = await fetch("/api/user/settings")
-        if (!res.ok) throw new Error("Erro ao carregar utilizador")
-        
-        const data = await res.json()
-        
-        const adaptedUser: User = {
+        const [userRes, postsRes] = await Promise.all([
+          fetch("/api/user/settings"),
+          fetch("/api/posts", { cache: 'no-store' })
+        ])
+
+        if (userRes.ok) {
+          const data = await userRes.json()
+          setUser({
             id: data.id || 0,
             name: data.nome || data.name || "Estudante",
             email: data.email || "",
             avatar: data.foto_url || data.avatar || "",
             year: data.ano_escolar || data.year || "",
             course: data.curso || data.course || ""
+          })
         }
-        setUser(adaptedUser)
-      } catch (error) {
-        console.error("Dashboard: Erro ao carregar user", error)
-      }
-    }
-    loadUser()
-  }, [])
 
-  // 2. CARREGAR POSTS
-  useEffect(() => {
-    const loadPosts = async () => {
-      try {
-        const res = await fetch("/api/posts", { cache: 'no-store' })
-        
-        if (res.ok) {
-            const data = await res.json()
-            if (Array.isArray(data)) {
-                const safeData = data.map((p: any) => ({
-                    id: p.id,
-                    content: p.content || "",
-                    author: p.author || "Anónimo",
-                    authorAvatar: p.authorAvatar || "",
-                    timestamp: p.timestamp,
-                    likes: typeof p.likes === 'number' ? p.likes : 0,
-                    isLiked: !!p.isLiked,
-                    comments: Array.isArray(p.comments) ? p.comments : [],
-                    image: p.image || null
-                }))
-                setPosts(safeData)
-            }
+        if (postsRes.ok) {
+          const data = await postsRes.json()
+          setPosts(Array.isArray(data) ? data : [])
         }
       } catch (error) {
-        console.error("Dashboard: Erro ao carregar posts", error)
+        console.error("Erro ao carregar dados:", error)
       } finally {
         setLoading(false)
       }
     }
-    loadPosts()
+    loadData()
   }, [])
 
-  // 3. CRIAR NOVO POST
-  const handleCreatePost = async (postContent: string, file: File | null) => {
-    if (!user) return
-
-    const tempImageUrl = file ? URL.createObjectURL(file) : null
-
-    const tempPost: Post = {
-        id: Date.now(),
-        content: postContent,
-        author: user.name,
-        authorAvatar: user.avatar,
-        timestamp: new Date().toISOString(),
-        likes: 0,
-        isLiked: false,
-        comments: [],
-        image: tempImageUrl 
+  const handleDeletePost = async (postId: number) => {
+    if (!confirm("Desejas eliminar esta publicação?")) return
+    setPosts(prev => prev.filter(p => p.id !== postId))
+    try {
+      const res = await fetch(`/api/posts/${postId}`, { method: "DELETE" })
+      if (!res.ok) throw new Error()
+    } catch (error) {
+      alert("Erro ao eliminar post.")
     }
-    
-    setPosts(prev => [tempPost, ...prev])
+  }
+
+  const handleStartEdit = (post: Post) => {
+    setEditingPostId(post.id)
+    setEditContent(post.content)
+    setActiveMenu(null)
+  }
+
+  // CORREÇÃO: Enviando FormData para coincidir com a API
+  const handleSaveEdit = async (postId: number) => {
+    if (!editContent.trim()) return
+
+    const previousPosts = [...posts]
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: editContent } : p))
+    setEditingPostId(null)
 
     try {
-        const formData = new FormData()
-        formData.append("content", postContent)
-        formData.append("userId", user.id.toString())
-        if (file) formData.append("image", file)
+      const formData = new FormData()
+      formData.append("content", editContent)
 
-        const res = await fetch("/api/posts", {
-            method: "POST",
-            body: formData 
-        })
+      const res = await fetch(`/api/posts/${postId}`, {
+        method: "PUT",
+        body: formData // Não definir headers manualmente para FormData
+      })
 
-        if (!res.ok) throw new Error("Falha na API")
-
+      if (!res.ok) throw new Error("Erro na resposta do servidor")
     } catch (error) {
-        console.error("Erro ao criar post:", error)
-        alert("Erro ao publicar post.")
-        setPosts(prev => prev.filter(p => p.id !== tempPost.id))
+      alert("Erro ao guardar a edição.")
+      setPosts(previousPosts)
+    }
+  }
+
+  const handleCreatePost = async (postContent: string, file: File | null) => {
+    if (!user) return
+    const formData = new FormData()
+    formData.append("content", postContent)
+    if (file) formData.append("image", file)
+
+    try {
+      const res = await fetch("/api/posts", { method: "POST", body: formData })
+      if (res.ok) {
+        const newPost = await res.json()
+        setPosts(prev => [newPost, ...prev])
+      }
+    } catch (error) {
+      console.error(error)
     }
   }
 
   const handleLike = async (postId: number) => {
-    setPosts(prev => prev.map(post => post.id === postId ? {
-      ...post,
-      isLiked: !post.isLiked,
-      likes: post.isLiked ? post.likes - 1 : post.likes + 1
-    } : post))
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p))
+    fetch("/api/posts/like", { 
+      method: "POST", 
+      headers: { "Content-Type": "application/json" }, 
+      body: JSON.stringify({ postId }) 
+    })
+  }
 
-    try {
-        await fetch("/api/posts/like", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ postId })
-        })
-    } catch (error) {
-        console.error("Erro like:", error)
+  const handleComment = async (postId: number, content: string) => {
+    const res = await fetch("/api/posts/comment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ postId, content })
+    })
+    if (res.ok) {
+      const comment = await res.json()
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments: [...p.comments, comment] } : p))
     }
   }
 
-  const handleComment = async (postId: number, commentContent: string) => {
-    if (!user) return
+  if (loading) return <div className={styles.loadingState}>Carregando EduConnect...</div>
+  if (!user) return <div className={styles.errorState}><Link href="/login">Ir para Login</Link></div>
 
-    try {
-        const res = await fetch("/api/posts/comment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ postId: postId, content: commentContent })
-        })
-
-        if (!res.ok) throw new Error("Erro API")
-        const savedComment = await res.json()
-        
-        setPosts(prev => prev.map(post => {
-            if (post.id === postId) {
-                return { ...post, comments: [...post.comments, savedComment] }
-            }
-            return post
-        }))
-
-    } catch (error) {
-        console.error("Erro ao comentar:", error)
-    }
-  }
-
-  if (loading) return <div className="flex justify-center items-center h-screen bg-slate-900 text-white">Carregando EduConnect...</div>
-  
-  if (!user && !loading) return (
-    <div className="flex flex-col justify-center items-center h-screen gap-4 bg-slate-900 text-white">
-        <p>Sessão expirada.</p>
-        <Link href="/login" className="text-emerald-500 hover:underline">Ir para Login</Link>
-    </div>
-  )
-
-  const safeUserForUI = user ? { ...user, name: user.name || "Utilizador", avatar: user.avatar || "" } : { id: 0, name: "", avatar: "", email: "", year: "", course: "" };
+  const safeUserUI = { ...user, name: user.name || "Utilizador", avatar: user.avatar || "" }
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerInner}>
-
           <Link href="/" className={styles.logoLink}>
-            <div className={styles.logoBox}>
-                <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
-            </div>
-            <span>EduConnect</span>
+            <Image src="/logo.png" alt="Logo" width={160} height={40} priority className={styles.logoImage} />
           </Link>
-
           <nav className={styles.desktopNav}>
             <Link href="/dashboard" className={styles.activeLink}>Feed</Link>
             <Link href="/groups">Grupos</Link>
             <Link href="/chat">Chat</Link>
           </nav>
-
           <div className={styles.actions}>
-            <Link href="/search"><Search className="w-5 h-5" /></Link>
-            <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
-            <Link href="/settings"><Settings className="w-5 h-5" /></Link>
+            <Link href="/search"><Search className={styles.icon} /></Link>
+            <Link href="/settings"><Settings className={styles.icon} /></Link>
             <Link href="/profile">
               <Avatar className={styles.avatar}>
-                <AvatarImage src={user?.avatar} />
-                <AvatarFallback className="bg-slate-700 text-white">{user?.name ? user.name[0].toUpperCase() : 'U'}</AvatarFallback>
+                <AvatarImage src={user.avatar} />
+                <AvatarFallback>{user.name[0]}</AvatarFallback>
               </Avatar>
             </Link>
-            <Link href="/login"><LogOut className="w-5 h-5 hover:text-red-400" /></Link>
+            <Link href="/login"><LogOut className={styles.logoutIcon} /></Link>
           </div>
         </div>
       </header>
 
       <main className={styles.main}>
         <section className={styles.feed}>
-          <CreatePostModal user={safeUserForUI} onCreatePost={handleCreatePost} />
+          <CreatePostModal user={safeUserUI} onCreatePost={handleCreatePost} />
           
-          {posts.length > 0 ? (
-            posts.map(post => (
-                <PostCard 
-                    key={post.id} 
-                    post={post} 
-                    currentUser={safeUserForUI} 
-                    onLike={handleLike} 
-                    onComment={handleComment} 
-                />
-            ))
-          ) : (
-             <div className="text-center py-10 text-gray-500">
-               {loading ? "A carregar posts..." : "Ainda não há publicações."}
-             </div>
-          )}
+          <div className={styles.postsList}>
+            {posts.map(post => (
+              <div key={post.id} className={styles.postWrapper}>
+                {editingPostId === post.id ? (
+                  <div className={styles.editForm}>
+                    <textarea 
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className={styles.editInput}
+                      autoFocus
+                    />
+                    <div className={styles.editActions}>
+                      <button onClick={() => setEditingPostId(null)} className={styles.cancelBtn}>Cancelar</button>
+                      <button onClick={() => handleSaveEdit(post.id)} className={styles.saveBtn}>Guardar</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {user.name === post.author && (
+                      <div className={styles.optionsMenu} ref={activeMenu === post.id ? menuRef : null}>
+                        <button className={styles.dotsBtn} onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}>
+                          <MoreHorizontal size={20} />
+                        </button>
+                        {activeMenu === post.id && (
+                          <div className={styles.dropdown}>
+                            <button onClick={() => handleStartEdit(post)} className={styles.editMenuBtn}>
+                              <Edit2 size={16} /> <span>Editar</span>
+                            </button>
+                            <button onClick={() => handleDeletePost(post.id)} className={styles.deleteBtn}>
+                              <Trash2 size={16} /> <span>Apagar</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <PostCard 
+                      post={post} 
+                      currentUser={safeUserUI} 
+                      onLike={handleLike} 
+                      onComment={handleComment} 
+                    />
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
         </section>
       </main>
-
-      {/* MOBILE NAV ATUALIZADO */}
-      <footer className={styles.mobileNav}>
-        <div className={styles.navContent}>
-          <Link href="/dashboard" className={styles.activeLink}>
-            <BookOpen className="w-5 h-5" />
-            <span>Feed</span>
-          </Link>
-          <Link href="/groups">
-            <Users className="w-5 h-5" />
-            <span>Grupos</span>
-          </Link>
-          <Link href="/chat">
-            <Bell className="w-5 h-5" />
-            <span>Chat</span>
-          </Link>
-        </div>
-      </footer>
     </div>
   )
 }

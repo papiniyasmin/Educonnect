@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image" ;
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,6 @@ import {
 } from "lucide-react";
 import styles from "./chat.module.scss";
 
-// --- Interfaces ---
 interface ChatItem {
   id: number;
   name: string;
@@ -47,7 +47,6 @@ export default function ChatPage() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // --- Helpers ---
   const getInitials = (name: string | undefined) => {
     if (!name) return "U"; 
     const names = name.trim().split(" ");
@@ -158,11 +157,17 @@ export default function ChatPage() {
       {/* HEADER DESKTOP */}
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <Link href="/" className={styles.logoArea}>
-            <div className={styles.logoIcon}><BookOpen /></div>
-            <span>EduConnect</span>
-          </Link>
-          <nav className={styles.nav}>
+         <Link href="/" className={styles.logoLink}>
+                      <Image 
+                        src="/logo.png" 
+                        alt="Logo EduConnect" 
+                        width={160} // Dimensão base para a qualidade
+                        height={40} // Dimensão base para a qualidade
+                        priority
+                        className={styles.logoImage} // A classe que criámos no SCSS
+                      />
+                    </Link>
+          <nav className={styles.desktopNav}>
             <Link href="/dashboard">Feed</Link>
             <Link href="/groups">Grupos</Link>
             <Link href="/chat" className={styles.activeLink}>Chat</Link>
