@@ -1,6 +1,17 @@
-import React from 'react';
+import * as React from 'react';
+import {
+  Html,
+  Head,
+  Preview,
+  Body,
+  Container,
+  Section,
+  Text,
+  Button,
+  Img,
+  Hr,
+} from '@react-email/components';
 
-// Definimos os dados que o email vai receber
 interface EmailProps {
   nome: string;
   linkVerificacao: string;
@@ -8,53 +19,128 @@ interface EmailProps {
 
 export default function TemplateBoasVindas({ nome, linkVerificacao }: EmailProps) {
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', backgroundColor: '#f4f4f5', padding: '40px' }}>
-      <div style={{ maxWidth: '600px', margin: '0 auto', backgroundColor: '#ffffff', borderRadius: '8px', padding: '30px', textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-        
-        {/* --- A TUA LOGO COM O DOMÍNIO DO VERCEL --- */}
-        <img 
-          src="https://educonnect-eopy.vercel.app/logo.png" 
-          alt="EduConnect Logo" 
-          width="98" 
-          height="98" 
-          style={{ 
-            borderRadius: '50%', 
-            objectFit: 'cover', 
-            backgroundColor: '#1a2332', /* Cor de fundo escura caso a logo seja transparente */
-            marginBottom: '20px'
-          }} 
-        />
+    <Html>
+      <Head />
+      {/* O Preview é aquele texto pequeno que aparece no Gmail antes de abrir o email */}
+      <Preview>Bem-vindo(a) ao EduConnect! Confirma a tua conta para começar.</Preview>
+      
+      <Body style={styles.main}>
+        <Container style={styles.container}>
+          
+          {/* Cabeçalho com o Logotipo */}
+          <Section style={styles.header}>
+            <Img
+              src="https://educonnect-eopy.vercel.app/logo.png"
+              width="180"
+              alt="EduConnect"
+              style={styles.logo}
+            />
+          </Section>
 
-        <h1 style={{ color: '#1e293b', margin: '0 0 15px 0' }}>Bem-vindo(a) ao EduConnect, {nome}!</h1>
-        
-        <p style={{ color: '#475569', fontSize: '16px', lineHeight: '1.6' }}>
-          Estamos muito felizes por te ter connosco. Para começares a explorar os grupos e partilhar conhecimento, só precisas de confirmar o teu email clicando no botão abaixo:
-        </p>
+          {/* Corpo Principal */}
+          <Section style={styles.content}>
+            <Text style={styles.heading}>Olá, {nome}! 👋</Text>
+            
+            <Text style={styles.paragraph}>
+              Bem-vindo(a) ao <strong>EduConnect</strong>! Estamos muito felizes por te ter a bordo.
+            </Text>
+            
+            <Text style={styles.paragraph}>
+              Para começares a explorar a plataforma, aceder aos teus cursos e te conectares com outros estudantes, precisamos apenas de verificar o teu email.
+            </Text>
 
-        {/* --- O TEU BOTÃO COM A COR DO SITE --- */}
-        <a 
-          href={linkVerificacao} 
-          style={{ 
-            display: 'inline-block', 
-            backgroundColor: '#2563eb', /* <-- MUDA ESTA COR para o HEX exato do teu site (Azul ou Verde) */
-            color: '#ffffff', 
-            padding: '14px 28px', 
-            textDecoration: 'none', 
-            borderRadius: '6px', 
-            marginTop: '25px', 
-            fontWeight: 'bold',
-            fontSize: '16px'
-          }}
-        >
-          Confirmar o meu Email
-        </a>
+            {/* Botão de Ação */}
+            <Section style={styles.btnContainer}>
+              <Button style={styles.button} href={linkVerificacao}>
+                Confirmar o meu Email
+              </Button>
+            </Section>
+          </Section>
 
-        <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '30px 0' }} />
+          <Hr style={styles.hr} />
 
-        <p style={{ color: '#94a3b8', fontSize: '12px', margin: '0' }}>
-          Se não criaste uma conta no EduConnect, podes ignorar este email com segurança.
-        </p>
-      </div>
-    </div>
+          {/* Rodapé */}
+          <Section style={styles.footer}>
+            <Text style={styles.footerText}>
+              Se não te registaste no EduConnect, podes ignorar e apagar este email com segurança.
+            </Text>
+            <Text style={styles.footerText}>
+              © 2024 EduConnect. Todos os direitos reservados.
+            </Text>
+          </Section>
+
+        </Container>
+      </Body>
+    </Html>
   );
 }
+
+// Estilos organizados (CSS in JS)
+const styles = {
+  main: {
+    backgroundColor: '#f1f5f9',
+    fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif',
+    padding: '40px 0',
+  },
+  container: {
+    backgroundColor: '#ffffff',
+    margin: '0 auto',
+    borderRadius: '12px',
+    overflow: 'hidden',
+    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+    maxWidth: '600px',
+  },
+  header: {
+    backgroundColor: '#0f172a',
+    padding: '30px 20px',
+    textAlign: 'center' as const,
+  },
+  logo: {
+    margin: '0 auto',
+  },
+  content: {
+    padding: '40px 40px 20px 40px',
+  },
+  heading: {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#0f172a',
+    margin: '0 0 20px',
+  },
+  paragraph: {
+    fontSize: '16px',
+    lineHeight: '26px',
+    color: '#475569',
+    margin: '0 0 20px',
+  },
+  btnContainer: {
+    textAlign: 'center' as const,
+    marginTop: '32px',
+    marginBottom: '20px',
+  },
+  button: {
+    backgroundColor: '#10b981',
+    borderRadius: '8px',
+    color: '#ffffff',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    textDecoration: 'none',
+    textAlign: 'center' as const,
+    padding: '16px 32px',
+    display: 'inline-block',
+  },
+  hr: {
+    borderColor: '#e2e8f0',
+    margin: '0 40px 20px 40px',
+  },
+  footer: {
+    padding: '0 40px 30px 40px',
+    textAlign: 'center' as const,
+  },
+  footerText: {
+    color: '#94a3b8',
+    fontSize: '13px',
+    lineHeight: '20px',
+    margin: '0 0 8px',
+  },
+};

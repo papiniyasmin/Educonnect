@@ -7,11 +7,9 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { 
   BookOpen, LogOut, Search, Settings, Bell, 
   UserPlus, Users, MoreHorizontal, Trash2, Edit2 
-} from "lucide-react"
+} from "lucide-react" // Adicionado o ícone Edit2
 import CreatePostModal from "@/components/create-post-modal"
 import PostCard from "@/components/post-card"
-
-// CORREÇÃO: Certifique-se que o nome do ficheiro na pasta é dashboard.module.scss
 import styles from "./dashboard.module.scss"
 
 interface User {
@@ -39,11 +37,16 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  
+  // Estados do Menu
   const [activeMenu, setActiveMenu] = useState<number | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
+
+  // Estados de Edição
   const [editingPostId, setEditingPostId] = useState<number | null>(null)
   const [editContent, setEditContent] = useState<string>("")
 
+  // Fechar menu ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -87,9 +90,13 @@ export default function DashboardPage() {
     loadData()
   }, [])
 
+  // --- APAGAR POST ---
   const handleDeletePost = async (postId: number) => {
     if (!confirm("Desejas eliminar esta publicação?")) return
+    
     setPosts(prev => prev.filter(p => p.id !== postId))
+    setActiveMenu(null)
+
     try {
       const res = await fetch(`/api/posts/${postId}`, { method: "DELETE" })
       if (!res.ok) throw new Error()
@@ -98,53 +105,61 @@ export default function DashboardPage() {
     }
   }
 
+  // --- EDITAR POST (INICIAR) ---
   const handleStartEdit = (post: Post) => {
     setEditingPostId(post.id)
     setEditContent(post.content)
     setActiveMenu(null)
   }
 
-  // CORREÇÃO: Enviando FormData para coincidir com a API
+  // --- EDITAR POST (GUARDAR) ---
   const handleSaveEdit = async (postId: number) => {
     if (!editContent.trim()) return
 
-    const previousPosts = [...posts]
+    // Otimismo visual: atualiza no ecrã imediatamente
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: editContent } : p))
-    setEditingPostId(null)
+    setEditingPostId(null) // Fecha o modo de edição
 
     try {
-      const formData = new FormData()
-      formData.append("content", editContent)
-
       const res = await fetch(`/api/posts/${postId}`, {
-        method: "PUT",
-        body: formData // Não definir headers manualmente para FormData
+        method: "PUT", // ou PATCH, dependendo da tua API
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: editContent })
       })
-
-      if (!res.ok) throw new Error("Erro na resposta do servidor")
+      if (!res.ok) throw new Error()
     } catch (error) {
       alert("Erro ao guardar a edição.")
-      setPosts(previousPosts)
     }
   }
 
+  // --- CRIAR POST ---
   const handleCreatePost = async (postContent: string, file: File | null) => {
     if (!user) return
+    const tempPost: Post = {
+      id: Date.now(),
+      content: postContent,
+      author: user.name,
+      authorAvatar: user.avatar,
+      timestamp: new Date().toISOString(),
+      likes: 0,
+      isLiked: false,
+      comments: [],
+      image: file ? URL.createObjectURL(file) : null
+    }
+    setPosts(prev => [tempPost, ...prev])
+
     const formData = new FormData()
     formData.append("content", postContent)
     if (file) formData.append("image", file)
 
     try {
-      const res = await fetch("/api/posts", { method: "POST", body: formData })
-      if (res.ok) {
-        const newPost = await res.json()
-        setPosts(prev => [newPost, ...prev])
-      }
+      await fetch("/api/posts", { method: "POST", body: formData })
     } catch (error) {
       console.error(error)
     }
   }
 
+  // --- LIKES E COMENTÁRIOS ---
   const handleLike = async (postId: number) => {
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p))
     fetch("/api/posts/like", { 
@@ -178,13 +193,16 @@ export default function DashboardPage() {
           <Link href="/" className={styles.logoLink}>
             <Image src="/logo.png" alt="Logo" width={160} height={40} priority className={styles.logoImage} />
           </Link>
+
           <nav className={styles.desktopNav}>
             <Link href="/dashboard" className={styles.activeLink}>Feed</Link>
             <Link href="/groups">Grupos</Link>
             <Link href="/chat">Chat</Link>
           </nav>
+
           <div className={styles.actions}>
             <Link href="/search"><Search className={styles.icon} /></Link>
+            <Link href="/friends/requests"><UserPlus className={styles.icon} /></Link>
             <Link href="/settings"><Settings className={styles.icon} /></Link>
             <Link href="/profile">
               <Avatar className={styles.avatar}>
@@ -204,6 +222,8 @@ export default function DashboardPage() {
           <div className={styles.postsList}>
             {posts.map(post => (
               <div key={post.id} className={styles.postWrapper}>
+                
+                {/* SE ESTIVER EM MODO EDIÇÃO, MOSTRA O FORMULÁRIO */}
                 {editingPostId === post.id ? (
                   <div className={styles.editForm}>
                     <textarea 
@@ -213,29 +233,44 @@ export default function DashboardPage() {
                       autoFocus
                     />
                     <div className={styles.editActions}>
-                      <button onClick={() => setEditingPostId(null)} className={styles.cancelBtn}>Cancelar</button>
-                      <button onClick={() => handleSaveEdit(post.id)} className={styles.saveBtn}>Guardar</button>
+                      <button onClick={() => setEditingPostId(null)} className={styles.cancelBtn}>
+                        Cancelar
+                      </button>
+                      <button onClick={() => handleSaveEdit(post.id)} className={styles.saveBtn}>
+                        Guardar
+                      </button>
                     </div>
                   </div>
                 ) : (
+                  /* CASO CONTRÁRIO, MOSTRA O POST NORMAL E O MENU */
                   <>
                     {user.name === post.author && (
                       <div className={styles.optionsMenu} ref={activeMenu === post.id ? menuRef : null}>
-                        <button className={styles.dotsBtn} onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}>
+                        <button 
+                          className={styles.dotsBtn} 
+                          onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
+                        >
                           <MoreHorizontal size={20} />
                         </button>
+                        
                         {activeMenu === post.id && (
                           <div className={styles.dropdown}>
+                            {/* BOTÃO EDITAR */}
                             <button onClick={() => handleStartEdit(post)} className={styles.editMenuBtn}>
-                              <Edit2 size={16} /> <span>Editar</span>
+                              <Edit2 size={16} />
+                              <span>Editar</span>
                             </button>
+                            
+                            {/* BOTÃO APAGAR */}
                             <button onClick={() => handleDeletePost(post.id)} className={styles.deleteBtn}>
-                              <Trash2 size={16} /> <span>Apagar</span>
+                              <Trash2 size={16} />
+                              <span>Apagar</span>
                             </button>
                           </div>
                         )}
                       </div>
                     )}
+                    
                     <PostCard 
                       post={post} 
                       currentUser={safeUserUI} 
@@ -244,11 +279,29 @@ export default function DashboardPage() {
                     />
                   </>
                 )}
+                
               </div>
             ))}
           </div>
         </section>
       </main>
+
+      <footer className={styles.mobileNav}>
+        <div className={styles.navContent}>
+          <Link href="/dashboard" className={styles.activeLink}>
+            <BookOpen size={20} />
+            <span>Feed</span>
+          </Link>
+          <Link href="/groups">
+            <Users size={20} />
+            <span>Grupos</span>
+          </Link>
+          <Link href="/chat">
+            <Bell size={20} />
+            <span>Chat</span>
+          </Link>
+        </div>
+      </footer>
     </div>
   )
 }
