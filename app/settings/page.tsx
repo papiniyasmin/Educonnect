@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // Icons
 import {
   User, BookOpen, GraduationCap, MapPin,
-  Mail, Camera, Save, Loader2, Sparkles, Search, Settings, LogOut, Users, Bell,UserPlus
+  Mail, Camera, Save, Loader2, Sparkles, Search, Settings, LogOut, Users, Bell, UserPlus
 } from "lucide-react";
 
 // Styles
@@ -35,6 +35,24 @@ interface UserFormData {
   habilidades: string;
   foto_url: string;
 }
+
+// --- FUNÇÕES AUXILIARES ---
+const getInitials = (name: string | undefined) => {
+  if (!name) return "U"; 
+  const names = name.trim().split(" ");
+  if (names.length >= 2) {
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
+
+const getAvatarUrl = (url: string | undefined | null) => {
+  if (!url) return "";
+  if (url.startsWith("http") || url.startsWith("data:")) {
+    return url;
+  }
+  return `/uploads/${url}`;
+};
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -63,12 +81,8 @@ export default function SettingsPage() {
 
         const data = await res.json();
         
-        // Lógica para tratar o caminho da foto corretamente
-        const fetchedFotoUrl = data.foto_url 
-          ? (data.foto_url.startsWith("http") || data.foto_url.startsWith("data:")) 
-            ? data.foto_url 
-            : `/uploads/${data.foto_url}`
-          : "";
+        // Usamos a nossa função auxiliar para tratar o URL vindo da API
+        const fetchedFotoUrl = getAvatarUrl(data.foto_url);
 
         setFormData({
           nome: data.nome || "",
@@ -83,7 +97,6 @@ export default function SettingsPage() {
           foto_url: fetchedFotoUrl
         });
 
-        // Atualiza o preview com a foto carregada da base de dados
         if (fetchedFotoUrl) setAvatarPreview(fetchedFotoUrl);
 
       } catch (err) {
@@ -107,7 +120,6 @@ export default function SettingsPage() {
         return;
       }
       setSelectedFile(file);
-      // Cria um URL temporário para mostrar a foto mal seja escolhida
       setAvatarPreview(URL.createObjectURL(file));
     }
   };
@@ -151,15 +163,15 @@ export default function SettingsPage() {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <Link href="/" className={styles.logoLink}>
-                      <Image 
-                        src="/logo.png" 
-                        alt="Logo EduConnect" 
-                        width={160} // Dimensão base para a qualidade
-                        height={40} // Dimensão base para a qualidade
-                        priority
-                        className={styles.logoImage} // A classe que criámos no SCSS
-                      />
-                    </Link>
+            <Image 
+              src="/logo.png" 
+              alt="Logo EduConnect" 
+              width={160} 
+              height={40} 
+              priority
+              className={styles.logoImage} 
+            />
+          </Link>
           <nav className={styles.nav}>
             <Link href="/dashboard">Feed</Link>
             <Link href="/groups">Grupos</Link>
@@ -168,17 +180,17 @@ export default function SettingsPage() {
           <div className={styles.userActions}>
             <Link href="/search"><Search className="w-5 h-5" /></Link>
             <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
+            <Link href="/notifications"><Bell className="w-5 h-5" /></Link>
             <Link href="/settings" className="text-emerald-400"><Settings className="w-5 h-5" /></Link>
             <Link href="/profile">
               <Avatar className="w-8 h-8 border border-slate-700">
-                {/* Imagem no Header */}
-                {avatarPreview ? <AvatarImage src={avatarPreview} className="object-cover" /> : null}
-                <AvatarFallback className="bg-emerald-600 text-white text-xs">
-                  {formData.nome ? formData.nome[0].toUpperCase() : "U"}
+                {avatarPreview && <AvatarImage src={avatarPreview} className="object-cover" />}
+                <AvatarFallback className="bg-emerald-600 text-white text-xs font-medium">
+                  {getInitials(formData.nome)}
                 </AvatarFallback>
               </Avatar>
             </Link>
-            <Link href="/login"><LogOut className="w-5 h-5" /></Link>
+            <Link href="/login"><LogOut className="w-5 h-5 hover:text-red-400 transition-colors" /></Link>
           </div>
         </div>
       </header>
@@ -207,10 +219,9 @@ export default function SettingsPage() {
                 <div className={styles.avatarSection}>
                   <div className={styles.avatarWrapper}>
                     <Avatar className={styles.avatar}>
-                      {/* Imagem Principal de Edição */}
-                      {avatarPreview ? <AvatarImage src={avatarPreview} className="object-cover" /> : null}
-                      <AvatarFallback className="text-3xl bg-emerald-600 text-white">
-                        {formData.nome ? formData.nome[0].toUpperCase() : <User />}
+                      {avatarPreview && <AvatarImage src={avatarPreview} className="object-cover" />}
+                      <AvatarFallback className="text-3xl bg-emerald-600 text-white font-medium">
+                        {getInitials(formData.nome)}
                       </AvatarFallback>
                     </Avatar>
                     <label htmlFor="avatar-upload" className={styles.cameraLabel}>
@@ -265,7 +276,7 @@ export default function SettingsPage() {
                       </div>
                       <div className={styles.inputGroup}>
                         <Label htmlFor="ano_escolar">Ano Escolar</Label>
-                        <select id="ano_escolar" value={formData.ano_escolar} onChange={handleChange} className="w-full h-10 bg-slate-800 border-slate-700 rounded-md px-3 text-sm text-white">
+                        <select id="ano_escolar" value={formData.ano_escolar} onChange={handleChange} className="w-full h-10 bg-slate-800 border-slate-700 rounded-md px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                           <option value="">Selecione...</option>
                           <option value="10º">10º Ano</option>
                           <option value="11º">11º Ano</option>

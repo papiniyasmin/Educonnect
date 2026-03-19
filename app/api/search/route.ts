@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import pool from "@/db";
 import jwt from 'jsonwebtoken';
+
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
@@ -8,13 +9,12 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const query = searchParams.get('q') || '';
     
-    // 1. Autenticação
+    // 1. Verificação de Autenticação
     const token = req.cookies.get('token')?.value;
     if (!token) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
     let myId;
     try {
-      // Tenta usar variável de ambiente, fallback para string fixa
       const secret = process.env.JWT_SECRET || "EDUCONNECT_SECRET_2024";
       const decoded: any = jwt.verify(token, secret);
       myId = decoded.id;
@@ -22,13 +22,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
+    // Se a query estiver vazia, retorna arrays vazios
+    if (!query.trim()) {
+      return NextResponse.json({ pessoas: [], grupos: [] });
+    }
+
     const connection = await pool.getConnection();
 
     try {
-      const searchTerm = `%${query}%`;
+      // REGRA CRUCIAL: O '%' apenas no final garante que a busca seja pela letra inicial
+      const searchTermStart = `${query.trim()}%`;
 
-      // 2. Procurar PESSOAS + Estado da Amizade
-      // Adicionei LIMIT 10 para não sobrecarregar
+      // Busca de Pessoas (Apenas nome que começa com a letra)
       const [pessoas]: any = await connection.execute(
         `SELECT 
             u.id, 
@@ -41,19 +46,21 @@ export async function GET(req: NextRequest) {
                 OR (a.utilizador_id = u.id AND a.amigo_id = ?) 
              LIMIT 1) as estado_amizade
          FROM utilizador u
-         WHERE (u.nome LIKE ? OR u.curso LIKE ?) 
-         AND u.id != ? -- Não mostrar o próprio utilizador
+         WHERE u.nome LIKE ? 
+         AND u.id != ? 
+         ORDER BY u.nome ASC
          LIMIT 10`,
-        [myId, myId, searchTerm, searchTerm, myId]
+        [myId, myId, searchTermStart, myId]
       );
 
-      // 3. Procurar GRUPOS
+      // Busca de Grupos (Apenas nome que começa com a letra)
       const [grupos]: any = await connection.execute(
         `SELECT id, nome, tipo, descricao 
          FROM grupo 
-         WHERE nome LIKE ? OR descricao LIKE ? 
+         WHERE nome LIKE ? 
+         ORDER BY nome ASC
          LIMIT 5`,
-        [searchTerm, searchTerm]
+        [searchTermStart]
       );
 
       return NextResponse.json({ pessoas, grupos });

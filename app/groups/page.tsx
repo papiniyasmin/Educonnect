@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { 
-  BookOpen, Search, Settings, LogOut, Users, Plus, Filter, MessageCircle, X, Bell,UserPlus,
+  BookOpen, Search, Settings, LogOut, Users, Plus, Filter, MessageCircle, X, Bell, UserPlus, Trash2, AlertTriangle,
   Calculator, Atom, Dna, Globe, BookType, Code, FlaskConical, Palette, Music, Landmark, BrainCircuit, Dumbbell
 } from "lucide-react";
 
@@ -69,19 +69,55 @@ export default function GroupsPage() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<number | null>(null); 
+  
+  // NOVO: Estado para abrir o Modal Bonito de Apagar Grupo
+  const [groupToDelete, setGroupToDelete] = useState<number | null>(null); 
+
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("todos");
   const [showJoinedOnly, setShowJoinedOnly] = useState(false);
 
+  // Tópicos da Base de Dados
+  const [availableTopics, setAvailableTopics] = useState<{id: number, nome: string}[]>([]);
+
   // Modal State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false); 
+
   const [newGroupData, setNewGroupData] = useState({
     name: "",
     description: "",
     subject: "Matemática",
     year: "10º Ano",
-    avatar: "" 
+    avatar: "",
+    topicId: 0 
   });
+
+  // Função para obter as iniciais
+  const getInitials = (name: string | undefined) => {
+    if (!name) return "U"; 
+    const names = name.trim().split(" ");
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Buscar Tópicos
+  useEffect(() => {
+    fetch("/api/topics")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+            setAvailableTopics(data);
+            if (data.length > 0) {
+                setNewGroupData(prev => ({ ...prev, topicId: data[0].id }));
+            }
+        }
+      })
+      .catch(err => console.error("Erro ao carregar tópicos:", err));
+  }, []);
 
   // 1. Pegar usuário logado e a foto
   useEffect(() => {
@@ -89,26 +125,32 @@ export default function GroupsPage() {
       .then(res => res.json())
       .then(data => {
         const userData = data.user || data;
+        const fetchedFotoUrl = userData.foto_url || userData.avatar;
         
-        // Garante que o avatar é lido corretamente ou fica string vazia
-        const avatarUrl = userData.foto_url || userData.avatar || "";
+        // Verifica se existe foto e constrói o caminho correto
+        const finalAvatarUrl = fetchedFotoUrl 
+          ? (fetchedFotoUrl.startsWith("http") || fetchedFotoUrl.startsWith("data:")) 
+            ? fetchedFotoUrl 
+            : `/uploads/${fetchedFotoUrl}`
+          : ""; // Fica vazio se não houver imagem
 
         setUser({
           id: userData.id,
-          name: userData.name || userData.nome, 
-          avatar: avatarUrl 
+          name: userData.name || userData.nome || "Utilizador", 
+          avatar: finalAvatarUrl 
         });
       })
       .catch(err => {
         console.error("Erro ao carregar user:", err);
-        setUser(null);
+        setUser({ id: 0, name: "Convidado", avatar: "" }); 
       });
   }, []);
 
   // 2. Pegar grupos
   useEffect(() => {
-    if (!user) return;
-    const userId = user.id;
+    if (user === null) return; 
+
+    const userId = user.id || 0;
 
     async function loadGroups() {
       try {
@@ -143,23 +185,21 @@ export default function GroupsPage() {
     loadGroups();
   }, [user]);
 
-  // Lógica de Entrar no Grupo ATUALIZADA
+  // Lógica de Entrar no Grupo
   const handleJoinGroup = async (groupId: number, currentlyJoined: boolean) => {
-    if (!user) return;
     setJoining(groupId);
 
     try {
       const res = await fetch("/api/groups/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ groupId, join: !currentlyJoined, userId: user.id }),
+        body: JSON.stringify({ groupId, join: !currentlyJoined }), 
       });
 
-      // NOVO: Verifica se o backend deu erro antes de mudar a cor do botão
       if (!res.ok) {
         const errorData = await res.json();
         console.error("Erro do servidor:", errorData);
-        alert("Ocorreu um erro ao tentar entrar no grupo. Vê a consola do VS Code.");
+        alert(`Ocorreu um erro: ${errorData.error || "Tenta recarregar a página."}`);
         setJoining(null);
         return; 
       }
@@ -174,42 +214,91 @@ export default function GroupsPage() {
     }
   };
 
-  // Lógica de Criar Grupo
+  // LÓGICA DE APAGAR O GRUPO
+  const confirmDeleteGroup = async () => {
+    if (groupToDelete === null) return;
+
+    setDeleting(groupToDelete);
+
+    try {
+      const res = await fetch("/api/groups/delete", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ groupId: groupToDelete }), 
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        alert(`Ação Bloqueada: ${errorData.error}`);
+        setDeleting(null);
+        setGroupToDelete(null); 
+        return; 
+      }
+
+      setGroups(prev => prev.filter(g => g.id !== groupToDelete));
+      setGroupToDelete(null); 
+
+    } catch (err) {
+      console.error("Erro ao apagar grupo:", err);
+      alert("Erro de ligação ao servidor.");
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  // Lógica de Criar Grupo 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (isCreating || !user || !user.id) return; 
+
+    setIsCreating(true); 
 
     try {
         const res = await fetch("/api/groups/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...newGroupData, ownerId: user.id })
+            body: JSON.stringify(newGroupData)
         });
 
-        if (res.ok) {
-            const createdGroup = await res.json();
-            const newGroupFormatted: Group = {
-                id: createdGroup.id || Date.now(),
-                name: newGroupData.name,
-                description: newGroupData.description,
-                subject: newGroupData.subject,
-                year: newGroupData.year,
-                memberCount: 1,
-                isJoined: true,
-                isPrivate: false,
-                avatar: newGroupData.avatar, 
-                posts: 0
-            };
-            setGroups([newGroupFormatted, ...groups]);
-            setIsCreateModalOpen(false);
-            setNewGroupData({ name: "", description: "", subject: "Matemática", year: "10º Ano", avatar: "" });
+        if (!res.ok) {
+            const error = await res.json();
+            alert(`Erro: ${error.error}`);
+            return;
         }
+
+        const createdGroup = await res.json();
+        
+        const newGroupFormatted: Group = {
+            id: createdGroup.id || Date.now(),
+            name: newGroupData.name,
+            description: newGroupData.description,
+            subject: newGroupData.subject,
+            year: newGroupData.year,
+            memberCount: 1,
+            isJoined: true,
+            isPrivate: false,
+            avatar: newGroupData.avatar, 
+            posts: 0
+        };
+        
+        setGroups([newGroupFormatted, ...groups]);
+        setIsCreateModalOpen(false);
+        setNewGroupData({ 
+            name: "", 
+            description: "", 
+            subject: "Matemática", 
+            year: "10º Ano", 
+            avatar: "", 
+            topicId: availableTopics.length > 0 ? availableTopics[0].id : 0 
+        });
     } catch (error) {
         console.error("Erro ao criar grupo", error);
+    } finally {
+        setIsCreating(false); 
     }
   };
 
-  if (loading && !user) return <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">Carregando...</div>;
+  if (loading && !user) return <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">Carregando utilizador...</div>;
 
   const safeGroups = Array.isArray(groups) ? groups : [];
   const filteredGroups = safeGroups.filter(g => {
@@ -239,10 +328,10 @@ export default function GroupsPage() {
                       <Image 
                         src="/logo.png" 
                         alt="Logo EduConnect" 
-                        width={160} // Dimensão base para a qualidade
-                        height={40} // Dimensão base para a qualidade
+                        width={160} 
+                        height={40} 
                         priority
-                        className={styles.logoImage} // A classe que criámos no SCSS
+                        className={styles.logoImage} 
                       />
                     </Link>
             
@@ -255,15 +344,17 @@ export default function GroupsPage() {
             <div className={styles.userActions}>
                 <Link href="/search"><Search className="w-4 h-4 md:w-5 md:h-5" /></Link>
                  <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
+                <Link href="/notifications"><Bell className="w-4 h-4 md:w-5 md:h-5" /></Link>
                 <Link href="/settings"><Settings className="w-4 h-4 md:w-5 md:h-5" /></Link>
+                
+                {/* Avatar Atualizado */}
                 <Link href="/profile">
                     <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">
-                        {/* A foto de perfil aparece aqui! */}
-                        {user?.avatar ? (
+                        {user?.avatar && (
                           <AvatarImage src={user.avatar} className="object-cover" />
-                        ) : null}
-                        <AvatarFallback className="bg-emerald-600 text-white text-xs">
-                            {user?.name ? user.name[0].toUpperCase() : 'U'}
+                        )}
+                        <AvatarFallback className="bg-emerald-600 text-white text-xs font-medium">
+                            {getInitials(user?.name)}
                         </AvatarFallback>
                     </Avatar>
                 </Link>
@@ -315,7 +406,7 @@ export default function GroupsPage() {
 
         {/* GRID DE RESULTADOS */}
         {loading ? (
-           <div className={styles.loadingText}>Carregando grupos...</div>
+           <div className={styles.loadingText}>A processar grupos...</div>
         ) : (
           <div className={styles.groupsGrid}>
             {filteredGroups.map(group => (
@@ -353,6 +444,18 @@ export default function GroupsPage() {
                         <Link href={`/groups/${group.id}`} className={styles.linkAccess}>
                             <Button variant="ghost" size="sm" className={styles.btnAccess}>Acessar</Button>
                         </Link>
+                        
+                        {group.isJoined && (
+                            <Button 
+                                variant="outline" 
+                                size="icon"
+                                onClick={() => setGroupToDelete(group.id)} 
+                                title="Apagar Grupo"
+                                className="text-red-500 hover:text-red-700 hover:bg-red-100 border-red-200 ml-auto p-2 transition-colors"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </Button>
+                        )}
                     </div>
                 </CardContent>
               </Card>
@@ -360,6 +463,41 @@ export default function GroupsPage() {
           </div>
         )}
       </div>
+
+      {/* MODAL BONITO DE CONFIRMAÇÃO DE APAGAR */}
+      {groupToDelete !== null && (
+        <div className={styles.modalOverlay}>
+            <Card className={`${styles.modalCard} max-w-sm`}>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-red-600 flex items-center gap-2 text-xl">
+                        <AlertTriangle className="w-6 h-6" />
+                        Apagar Grupo
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 pt-0">
+                    <p className="text-slate-600 mb-6 text-sm leading-relaxed">
+                        Tens a certeza que queres apagar este grupo <strong>permanentemente</strong>? Esta ação não pode ser desfeita e todos os dados serão perdidos.
+                    </p>
+                    <div className="flex justify-end gap-3">
+                        <Button 
+                            variant="outline" 
+                            onClick={() => setGroupToDelete(null)}
+                            disabled={deleting === groupToDelete}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button 
+                            className="bg-red-600 hover:bg-red-700 text-white border-transparent"
+                            onClick={confirmDeleteGroup}
+                            disabled={deleting === groupToDelete}
+                        >
+                            {deleting === groupToDelete ? "A apagar..." : "Sim, Apagar"}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+      )}
 
       {/* MODAL DE CRIAR GRUPO */}
       {isCreateModalOpen && (
@@ -379,13 +517,28 @@ export default function GroupsPage() {
                                 required
                                 value={newGroupData.name}
                                 onChange={e => setNewGroupData({...newGroupData, name: e.target.value})}
-                                placeholder="Ex: Estudo de Física Quântica"
+                                placeholder="Ex: Sistemas de Informação"
                             />
                         </div>
+
                         <div className={styles.formGroup}>
-                            <label>Matéria</label>
+                            <label>Tópico Principal</label>
                             <select 
-                                className="w-full h-10 px-3 rounded-md border"
+                                className="w-full h-10 px-3 rounded-md border text-sm text-slate-600 bg-white"
+                                value={newGroupData.topicId}
+                                onChange={e => setNewGroupData({...newGroupData, topicId: Number(e.target.value)})}
+                            >
+                                {availableTopics.length === 0 && <option value={0}>A carregar tópicos...</option>}
+                                {availableTopics.map(t => (
+                                    <option key={t.id} value={t.id}>{t.nome}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className={styles.formGroup}>
+                            <label>Matéria Principal</label>
+                            <select 
+                                className="w-full h-10 px-3 rounded-md border text-sm text-slate-600 bg-white"
                                 value={newGroupData.subject}
                                 onChange={e => setNewGroupData({...newGroupData, subject: e.target.value})}
                             >
@@ -399,9 +552,8 @@ export default function GroupsPage() {
                             <Input 
                                 value={newGroupData.avatar}
                                 onChange={e => setNewGroupData({...newGroupData, avatar: e.target.value})}
-                                placeholder="Cole um link de imagem ou deixe vazio para usar ícone padrão"
+                                placeholder="Cole um link de imagem ou deixe vazio"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Se vazio, usaremos um ícone baseado no nome e matéria.</p>
                         </div>
                         <div className={styles.formGroup}>
                             <label>Descrição</label>
@@ -411,8 +563,8 @@ export default function GroupsPage() {
                                 placeholder="Objetivo do grupo..."
                             />
                         </div>
-                        <Button type="submit" className={styles.btnSubmit}>
-                            Criar Grupo
+                        <Button type="submit" disabled={isCreating} className={styles.btnSubmit}>
+                            {isCreating ? "A criar..." : "Criar Grupo"}
                         </Button>
                     </form>
                 </CardContent>

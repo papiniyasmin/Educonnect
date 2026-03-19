@@ -6,8 +6,10 @@ import Image from "next/image"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input" 
-// Adicionei 'Users' e 'UserIcon' para o footer mobile!
-import { BookOpen, LogOut, Search, Settings, Check, X, UserPlus, Bell, Users, User as UserIcon } from "lucide-react"
+import { 
+  BookOpen, LogOut, Search, Settings, Check, X, 
+  UserPlus, Bell, Users, User as UserIcon 
+} from "lucide-react"
 
 import styles from "./friendRequests.module.scss"
 
@@ -27,6 +29,24 @@ interface FriendRequest {
   course: string
   timestamp: string
 }
+
+// --- FUNÇÕES AUXILIARES ---
+const getInitials = (name: string | undefined) => {
+  if (!name) return "U"; 
+  const names = name.trim().split(" ");
+  if (names.length >= 2) {
+    return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
+
+const getAvatarUrl = (url: string | undefined) => {
+  if (!url) return "";
+  if (url.startsWith("http") || url.startsWith("data:")) {
+    return url;
+  }
+  return `/uploads/${url}`;
+};
 
 export default function FriendRequestsPage() {
   const [user, setUser] = useState<User | null>(null)
@@ -117,6 +137,7 @@ export default function FriendRequestsPage() {
   if (loadingUser) return <div className={styles.container}><div className="p-10 text-center">Carregando...</div></div>
 
   const safeUser = user || { name: "User", avatar: "", year: "", course: "" }
+  const userAvatarUrl = getAvatarUrl(safeUser.avatar);
 
   return (
     <div className={styles.container}>
@@ -124,17 +145,16 @@ export default function FriendRequestsPage() {
       {/* --- HEADER --- */}
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          {/* LOGO AGORA CONTROLADA TOTALMENTE PELO SCSS */}
-                    <Link href="/" className={styles.logoLink}>
-                      <Image 
-                        src="/logo.png" 
-                        alt="Logo EduConnect" 
-                        width={160} // Dimensão base para a qualidade
-                        height={40} // Dimensão base para a qualidade
-                        priority
-                        className={styles.logoImage} // A classe que criámos no SCSS
-                      />
-                    </Link>
+          <Link href="/" className={styles.logoLink}>
+            <Image 
+              src="/logo.png" 
+              alt="Logo EduConnect" 
+              width={160} 
+              height={40} 
+              priority
+              className={styles.logoImage} 
+            />
+          </Link>
 
           <nav className={styles.desktopNav}>
             <Link href="/dashboard">Feed</Link>
@@ -148,13 +168,15 @@ export default function FriendRequestsPage() {
                <UserPlus size={20} />
                {requests.length > 0 && <span className={styles.badge}></span>}
             </Link>
-
+            <Link href="/notifications"><Bell size={20} /></Link>
             <Link href="/settings"><Settings size={20} /></Link>
             
             <Link href="/profile">
-              <Avatar className="w-8 h-8">
-                <AvatarImage src={safeUser.avatar} />
-                <AvatarFallback>{safeUser.name ? safeUser.name[0] : 'U'}</AvatarFallback>
+              <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">
+                {userAvatarUrl && <AvatarImage src={userAvatarUrl} className="object-cover" />}
+                <AvatarFallback className="bg-emerald-600 text-white text-xs font-medium">
+                  {getInitials(safeUser.name)}
+                </AvatarFallback>
               </Avatar>
             </Link>
             
@@ -171,8 +193,10 @@ export default function FriendRequestsPage() {
             <div className={styles.profileCard}>
               <div className={styles.cardContent}>
                 <Avatar className={styles.avatarLarge}>
-                  <AvatarImage src={safeUser.avatar} />
-                  <AvatarFallback>{safeUser.name ? safeUser.name[0] : 'U'}</AvatarFallback>
+                  {userAvatarUrl && <AvatarImage src={userAvatarUrl} className="object-cover" />}
+                  <AvatarFallback className="bg-emerald-600 text-white font-medium">
+                    {getInitials(safeUser.name)}
+                  </AvatarFallback>
                 </Avatar>
                 <h3>{safeUser.name}</h3>
                 <p>{safeUser.year} — {safeUser.course}</p>
@@ -201,48 +225,53 @@ export default function FriendRequestsPage() {
                 </div>
             ) : (
                 <div className={styles.requestsList}>
-                    {requests.map((req) => (
-                        <div key={req.id} className={styles.requestCard}>
-                            <div className={styles.cardInner}>
-                                <div className={styles.userInfo}>
-                                    <Avatar className={styles.avatar}>
-                                        <AvatarImage src={req.avatar} />
-                                        <AvatarFallback>{req.name[0]}</AvatarFallback>
-                                    </Avatar>
-                                    <div className={styles.details}>
-                                        <h3>{req.name}</h3>
-                                        <p className={styles.course}>{req.course}</p>
-                                        <p className={styles.date}>
-                                            {new Date(req.timestamp).toLocaleDateString()}
-                                        </p>
-                                    </div>
-                                </div>
+                    {requests.map((req) => {
+                        const reqAvatarUrl = getAvatarUrl(req.avatar);
+                        return (
+                          <div key={req.id} className={styles.requestCard}>
+                              <div className={styles.cardInner}>
+                                  <div className={styles.userInfo}>
+                                      <Avatar className={styles.avatar}>
+                                          {reqAvatarUrl && <AvatarImage src={reqAvatarUrl} className="object-cover" />}
+                                          <AvatarFallback className="bg-emerald-600 text-white font-medium">
+                                            {getInitials(req.name)}
+                                          </AvatarFallback>
+                                      </Avatar>
+                                      <div className={styles.details}>
+                                          <h3>{req.name}</h3>
+                                          <p className={styles.course}>{req.course}</p>
+                                          <p className={styles.date}>
+                                              {new Date(req.timestamp).toLocaleDateString()}
+                                          </p>
+                                      </div>
+                                  </div>
 
-                                <div className={styles.actions}>
-                                    <Button 
-                                        className={styles.btnAccept}
-                                        onClick={() => handleResponse(req.id, 'accept')}
-                                    >
-                                        <Check className="w-4 h-4 mr-2" /> Aceitar
-                                    </Button>
-                                    
-                                    <Button 
-                                        variant="outline"
-                                        className={styles.btnReject}
-                                        onClick={() => handleResponse(req.id, 'reject')}
-                                    >
-                                        <X className="w-4 h-4 mr-2" /> Recusar
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                                  <div className={styles.actions}>
+                                      <Button 
+                                          className={styles.btnAccept}
+                                          onClick={() => handleResponse(req.id, 'accept')}
+                                      >
+                                          <Check className="w-4 h-4 mr-2" /> Aceitar
+                                      </Button>
+                                      
+                                      <Button 
+                                          variant="outline"
+                                          className={styles.btnReject}
+                                          onClick={() => handleResponse(req.id, 'reject')}
+                                      >
+                                          <X className="w-4 h-4 mr-2" /> Recusar
+                                      </Button>
+                                  </div>
+                              </div>
+                          </div>
+                        );
+                    })}
                 </div>
             )}
           </section>
       </main>
 
-      {/* --- FOOTER MOBILE (Adicionado aqui!) --- */}
+      {/* --- FOOTER MOBILE --- */}
       <footer className={styles.mobileNav}>
         <div className={styles.navContent}>
           <Link href="/dashboard">

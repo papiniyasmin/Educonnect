@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { 
   BookOpen, LogOut, Search, Settings, Bell, 
   UserPlus, Users, MoreHorizontal, Trash2, Edit2 
-} from "lucide-react" // Adicionado o ícone Edit2
+} from "lucide-react" 
 import CreatePostModal from "@/components/create-post-modal"
 import PostCard from "@/components/post-card"
 import styles from "./dashboard.module.scss"
@@ -31,6 +31,7 @@ interface Post {
   isLiked: boolean
   comments: any[]
   image?: string | null
+  topic?: string
 }
 
 export default function DashboardPage() {
@@ -38,15 +39,22 @@ export default function DashboardPage() {
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
   
-  // Estados do Menu
   const [activeMenu, setActiveMenu] = useState<number | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
 
-  // Estados de Edição
   const [editingPostId, setEditingPostId] = useState<number | null>(null)
   const [editContent, setEditContent] = useState<string>("")
 
-  // Fechar menu ao clicar fora
+  // Função para obter as iniciais
+  const getInitials = (name: string | undefined) => {
+    if (!name) return "U"; 
+    const names = name.trim().split(" ");
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -57,109 +65,96 @@ export default function DashboardPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [userRes, postsRes] = await Promise.all([
-          fetch("/api/user/settings"),
-          fetch("/api/posts", { cache: 'no-store' })
-        ])
+  const loadData = async () => {
+    try {
+      const [userRes, postsRes] = await Promise.all([
+        fetch("/api/user/settings"),
+        fetch("/api/posts", { cache: 'no-store' })
+      ])
 
-        if (userRes.ok) {
-          const data = await userRes.json()
-          setUser({
-            id: data.id || 0,
-            name: data.nome || data.name || "Estudante",
-            email: data.email || "",
-            avatar: data.foto_url || data.avatar || "",
-            year: data.ano_escolar || data.year || "",
-            course: data.curso || data.course || ""
-          })
-        }
+      if (userRes.ok) {
+        const data = await userRes.json()
+        
+        // Verifica se existe foto e constrói o caminho correto
+        const fetchedFotoUrl = data.foto_url || data.avatar;
+        const finalAvatarUrl = fetchedFotoUrl 
+          ? (fetchedFotoUrl.startsWith("http") || fetchedFotoUrl.startsWith("data:")) 
+            ? fetchedFotoUrl 
+            : `/uploads/${fetchedFotoUrl}`
+          : ""; // Fica vazio se não houver imagem
 
-        if (postsRes.ok) {
-          const data = await postsRes.json()
-          setPosts(Array.isArray(data) ? data : [])
-        }
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error)
-      } finally {
-        setLoading(false)
+        setUser({
+          id: data.id || 0,
+          name: data.nome || data.name || "Estudante",
+          email: data.email || "",
+          avatar: finalAvatarUrl,
+          year: data.ano_escolar || data.year || "",
+          course: data.curso || data.course || ""
+        })
       }
+
+      if (postsRes.ok) {
+        const data = await postsRes.json()
+        setPosts(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
     loadData()
   }, [])
 
-  // --- APAGAR POST ---
   const handleDeletePost = async (postId: number) => {
     if (!confirm("Desejas eliminar esta publicação?")) return
-    
     setPosts(prev => prev.filter(p => p.id !== postId))
     setActiveMenu(null)
-
     try {
-      const res = await fetch(`/api/posts/${postId}`, { method: "DELETE" })
-      if (!res.ok) throw new Error()
+      await fetch(`/api/posts/${postId}`, { method: "DELETE" })
     } catch (error) {
       alert("Erro ao eliminar post.")
     }
   }
 
-  // --- EDITAR POST (INICIAR) ---
   const handleStartEdit = (post: Post) => {
     setEditingPostId(post.id)
     setEditContent(post.content)
     setActiveMenu(null)
   }
 
-  // --- EDITAR POST (GUARDAR) ---
   const handleSaveEdit = async (postId: number) => {
     if (!editContent.trim()) return
-
-    // Otimismo visual: atualiza no ecrã imediatamente
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: editContent } : p))
-    setEditingPostId(null) // Fecha o modo de edição
-
+    setEditingPostId(null) 
     try {
-      const res = await fetch(`/api/posts/${postId}`, {
-        method: "PUT", // ou PATCH, dependendo da tua API
+      await fetch(`/api/posts/${postId}`, {
+        method: "PUT", 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: editContent })
       })
-      if (!res.ok) throw new Error()
     } catch (error) {
       alert("Erro ao guardar a edição.")
     }
   }
 
-  // --- CRIAR POST ---
-  const handleCreatePost = async (postContent: string, file: File | null) => {
+  const handleCreatePost = async (postContent: string, file: File | null, topicId: number) => {
     if (!user) return
-    const tempPost: Post = {
-      id: Date.now(),
-      content: postContent,
-      author: user.name,
-      authorAvatar: user.avatar,
-      timestamp: new Date().toISOString(),
-      likes: 0,
-      isLiked: false,
-      comments: [],
-      image: file ? URL.createObjectURL(file) : null
-    }
-    setPosts(prev => [tempPost, ...prev])
-
     const formData = new FormData()
     formData.append("content", postContent)
+    formData.append("topicId", topicId.toString())
     if (file) formData.append("image", file)
 
     try {
       await fetch("/api/posts", { method: "POST", body: formData })
+      loadData() 
     } catch (error) {
       console.error(error)
     }
   }
 
-  // --- LIKES E COMENTÁRIOS ---
   const handleLike = async (postId: number) => {
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } : p))
     fetch("/api/posts/like", { 
@@ -203,13 +198,19 @@ export default function DashboardPage() {
           <div className={styles.actions}>
             <Link href="/search"><Search className={styles.icon} /></Link>
             <Link href="/friends/requests"><UserPlus className={styles.icon} /></Link>
+            <Link href="/notifications"><Bell className={styles.icon} /></Link>
             <Link href="/settings"><Settings className={styles.icon} /></Link>
+            
+            {/* Secção do Avatar atualizada */}
             <Link href="/profile">
-              <Avatar className={styles.avatar}>
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback>{user.name[0]}</AvatarFallback>
+              <Avatar className={`${styles.avatar} border border-slate-700`}>
+                {user.avatar && <AvatarImage src={user.avatar} className="object-cover" />}
+                <AvatarFallback className="bg-emerald-600 text-white text-xs font-medium">
+                  {getInitials(user.name)}
+                </AvatarFallback>
               </Avatar>
             </Link>
+            
             <Link href="/login"><LogOut className={styles.logoutIcon} /></Link>
           </div>
         </div>
@@ -217,71 +218,80 @@ export default function DashboardPage() {
 
       <main className={styles.main}>
         <section className={styles.feed}>
-          <CreatePostModal user={safeUserUI} onCreatePost={handleCreatePost} />
-          
-          <div className={styles.postsList}>
-            {posts.map(post => (
-              <div key={post.id} className={styles.postWrapper}>
-                
-                {/* SE ESTIVER EM MODO EDIÇÃO, MOSTRA O FORMULÁRIO */}
-                {editingPostId === post.id ? (
-                  <div className={styles.editForm}>
-                    <textarea 
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                      className={styles.editInput}
-                      autoFocus
-                    />
-                    <div className={styles.editActions}>
-                      <button onClick={() => setEditingPostId(null)} className={styles.cancelBtn}>
-                        Cancelar
-                      </button>
-                      <button onClick={() => handleSaveEdit(post.id)} className={styles.saveBtn}>
-                        Guardar
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  /* CASO CONTRÁRIO, MOSTRA O POST NORMAL E O MENU */
-                  <>
-                    {user.name === post.author && (
-                      <div className={styles.optionsMenu} ref={activeMenu === post.id ? menuRef : null}>
-                        <button 
-                          className={styles.dotsBtn} 
-                          onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}
-                        >
-                          <MoreHorizontal size={20} />
+          <div className="max-w-2xl mx-auto w-full px-4">
+            
+            <CreatePostModal user={safeUserUI} onCreatePost={handleCreatePost} />
+            
+            <div className={styles.postsList}>
+              {posts.map(post => (
+                <div key={post.id} className="relative mb-6">
+                  
+                  {editingPostId === post.id ? (
+                    <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+                      <textarea 
+                        value={editContent}
+                        rows={1}
+                        ref={(el) => {
+                          if (el) {
+                            el.style.height = "auto"
+                            el.style.height = `${el.scrollHeight}px`
+                          }
+                        }}
+                        onChange={(e) => {
+                          setEditContent(e.target.value)
+                          e.target.style.height = "auto"
+                          e.target.style.height = `${e.target.scrollHeight}px`
+                        }}
+                        className="w-full px-3 py-1.5 text-sm leading-tight bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none min-h-[32px]"
+                        style={{ overflow: "hidden" }}
+                        autoFocus
+                      />
+                      <div className="flex justify-end gap-2 mt-2">
+                        <button onClick={() => setEditingPostId(null)} className="px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-md transition-colors">
+                          Cancelar
                         </button>
-                        
-                        {activeMenu === post.id && (
-                          <div className={styles.dropdown}>
-                            {/* BOTÃO EDITAR */}
-                            <button onClick={() => handleStartEdit(post)} className={styles.editMenuBtn}>
-                              <Edit2 size={16} />
-                              <span>Editar</span>
-                            </button>
-                            
-                            {/* BOTÃO APAGAR */}
-                            <button onClick={() => handleDeletePost(post.id)} className={styles.deleteBtn}>
-                              <Trash2 size={16} />
-                              <span>Apagar</span>
-                            </button>
-                          </div>
-                        )}
+                        <button onClick={() => handleSaveEdit(post.id)} className="px-3 py-1 text-xs font-medium bg-emerald-600 hover:bg-emerald-700 text-white rounded-md transition-colors">
+                          Guardar
+                        </button>
                       </div>
-                    )}
-                    
-                    <PostCard 
-                      post={post} 
-                      currentUser={safeUserUI} 
-                      onLike={handleLike} 
-                      onComment={handleComment} 
-                    />
-                  </>
-                )}
-                
-              </div>
-            ))}
+                    </div>
+                  ) : (
+                    <>
+                      {user.name === post.author && (
+                        <div className="absolute top-4 right-4 z-10" ref={activeMenu === post.id ? menuRef : null}>
+                          <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}>
+                            <MoreHorizontal size={20} />
+                          </button>
+                          
+                          {activeMenu === post.id && (
+                            <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                              <button onClick={() => handleStartEdit(post)} className="flex items-center w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 gap-2">
+                                <Edit2 size={16} />
+                                <span>Editar</span>
+                              </button>
+                              
+                              <button onClick={() => handleDeletePost(post.id)} className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 gap-2">
+                                <Trash2 size={16} />
+                                <span>Apagar</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <PostCard 
+                        post={post} 
+                        currentUser={safeUserUI} 
+                        onLike={handleLike} 
+                        onComment={handleComment} 
+                      />
+                    </>
+                  )}
+                  
+                </div>
+              ))}
+            </div>
+            
           </div>
         </section>
       </main>

@@ -173,18 +173,26 @@ export default function ChatPage() {
             <Link href="/chat" className={styles.activeLink}>Chat</Link>
           </nav>
           <div className={styles.actions}>
-            <Link href="/search"><Search /></Link>
-            <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
-            <Link href="/settings"><Settings /></Link>
-            <Link href="/profile">
-              <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">
-                {currentUser?.avatar && <AvatarImage src={currentUser.avatar} />}
-                <AvatarFallback className="bg-emerald-600 text-white text-xs">
-                    {getInitials(currentUser?.name)}
-                </AvatarFallback>
-              </Avatar>
-            </Link>
-            <Link href="/login"><LogOut /></Link>
+  <Link href="/search"><Search /></Link>
+  <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
+  <Link href="/settings"><Settings /></Link>
+  
+  {/* Link de Notificações isolado */}
+  <Link href="/notifications" className={styles.activeIcon}>
+    <Bell className="w-5 h-5" />
+  </Link>
+  
+  {/* Link de Perfil isolado */}
+  <Link href="/profile">
+    <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">
+      {currentUser?.avatar && <AvatarImage src={currentUser.avatar} />}
+      <AvatarFallback className="bg-emerald-600 text-white text-xs">
+          {getInitials(currentUser?.name)}
+      </AvatarFallback>
+    </Avatar>
+  </Link>
+  
+  <Link href="/login"><LogOut /></Link>
           </div>
         </div>
       </header>

@@ -13,7 +13,7 @@ cloudinary.config({
 
 export const dynamic = 'force-dynamic';
 
-// --- GET: Buscar posts (Mantém a lógica, mas garante a conexão) ---
+// --- GET: Buscar posts com Tópicos ---
 export async function GET() {
   try {
     const cookieStore = cookies();
@@ -29,11 +29,20 @@ export async function GET() {
 
     const connection = await pool.getConnection();
     try {
+      // ADICIONADO: Joins para buscar a tabela de topico
       const query = `
-        SELECT m.id, m.conteudo as raw_content, m.data as timestamp, u.nome as author, u.foto_url as authorAvatar
+        SELECT 
+          m.id, 
+          m.conteudo as raw_content, 
+          m.data as timestamp, 
+          u.nome as author, 
+          u.foto_url as authorAvatar,
+          t.nome as topic
         FROM mensagem m
         JOIN mensagem_geral mg ON m.id = mg.mensagem_id
         JOIN utilizador u ON mg.remetente_id = u.id
+        LEFT JOIN mensagem_topico mt ON m.id = mt.mensagem_id
+        LEFT JOIN topico t ON mt.topico_id = t.id
         ORDER BY m.data DESC
       `;
 
@@ -54,6 +63,7 @@ export async function GET() {
           timestamp: row.timestamp,
           author: row.author,
           authorAvatar: row.authorAvatar,
+          topic: row.topic || null, // <-- Tópico retornado para o frontend
           likes: Array.isArray(contentObj.likes) ? contentObj.likes.length : 0,
           isLiked: Array.isArray(contentObj.likes) ? contentObj.likes.includes(currentUserId) : false,
           comments: Array.isArray(contentObj.comentarios) ? contentObj.comentarios : []
@@ -65,11 +75,12 @@ export async function GET() {
       connection.release();
     }
   } catch (error) {
+    console.error("Erro GET posts:", error);
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
 }
 
-// --- POST: Criar Post com Cloudinary ---
+// --- POST: Criar Post com Cloudinary e Gravar Tópico ---
 export async function POST(req: Request) {
   let connection;
   try {
@@ -90,25 +101,27 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const content = formData.get("content") as string;
     const file = formData.get("image") as File | null;
+    const topicId = formData.get("topicId") as string; // <-- Recebe o ID do Tópico escolhido no Modal
 
     if ((!content || !content.trim()) && !file) {
       return NextResponse.json({ error: "O post precisa de texto ou de uma imagem." }, { status: 400 });
     }
 
-    // 3. LÓGICA CLOUDINARY (Substitui o salvamento local)
+    // 3. LÓGICA CLOUDINARY
     let imageUrl = null;
     if (file && file.size > 0) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
       const uploadResponse: any = await new Promise((resolve, reject) => {
-        cloudinary.uploader.upload_stream(
-          { folder: "educonnect_posts" }, // Pasta diferente para organizar
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "educonnect_posts" },
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
           }
-        ).end(buffer);
+        );
+        uploadStream.end(buffer);
       });
 
       imageUrl = uploadResponse.secure_url;
@@ -126,15 +139,26 @@ export async function POST(req: Request) {
     await connection.beginTransaction();
 
     try {
+      // Insere na tabela Mensagem
       const [resMsg]: any = await connection.execute(
         'INSERT INTO mensagem (data, titulo, conteudo, tipo) VALUES (NOW(), ?, ?, ?)',
         ['Post Geral', contentJSON, 'experiencia']
       );
+      const mensagem_id = resMsg.insertId;
       
+      // Associa a mensagem ao Remetente no Feed
       await connection.execute(
         'INSERT INTO mensagem_geral (remetente_id, mensagem_id) VALUES (?, ?)',
-        [userId, resMsg.insertId]
+        [userId, mensagem_id]
       );
+
+      // ADICIONADO: Associa a Mensagem ao Tópico!
+      if (topicId && topicId !== "0") {
+        await connection.execute(
+          "INSERT INTO mensagem_topico (mensagem_id, topico_id) VALUES (?, ?)",
+          [mensagem_id, topicId]
+        );
+      }
 
       await connection.commit();
       return NextResponse.json({ success: true });

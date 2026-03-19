@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import pool from "@/db";
+import pool from "@/db.js";
 import { getUserId } from "@/lib/auth"; 
 import { RowDataPacket } from "mysql2";
 
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const type = searchParams.get("type"); // 'private' ou 'group'
+    const type = searchParams.get("type"); 
 
     const connection = await pool.getConnection();
 
@@ -20,8 +20,7 @@ export async function GET(req: NextRequest) {
       let params: any[] = [];
 
       if (type === "private") {
-        // --- AMIGOS (Conversas Privadas) ---
-        // Apanha o ID, Nome e Foto do AMIGO onde o estado é 'ACEITE'
+      
         query = `
           SELECT 
             u.id, 
