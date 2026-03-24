@@ -1,14 +1,23 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import pool from "@/db"; 
-import { RowDataPacket } from "mysql2/promise";
 import { getUserId } from "@/lib/auth";
 
+// =========================================================================
+// GET: EXPLORAR GRUPOS
+// =========================================================================
 export async function GET(req: NextRequest) {
   try {
     const userId = getUserId() || 0;
 
-    const [rows] = await pool.query<RowDataPacket[]>(
+    // ---------------------------------------------------------
+    // 1. BUSCA DE DADOS
+    // ---------------------------------------------------------
+    // - Total de membros
+    // - Total de posts (contando as mensagens ligadas aos membros do grupo)
+    // - Se o utilizador atual já faz parte do grupo
+    
+    const [rows]: any = await pool.query(
       `SELECT 
         g.id, 
         g.nome, 
@@ -16,17 +25,16 @@ export async function GET(req: NextRequest) {
         g.tipo, 
         g.data_criacao,
         
-        -- Contagem de Membros (Esta estava certa)
+        -- Contagem de Membros
         (SELECT COUNT(*) FROM membro m WHERE m.grupo_id = g.id) as total_membros,
 
-        -- Contagem de Posts (CORRIGIDA)
-        -- Temos de juntar com a tabela 'membro' para saber o grupo
+        -- Contagem de Posts (Relacionando mensagem_grupo -> membro -> grupo)
         (SELECT COUNT(*) 
          FROM mensagem_grupo mg 
          INNER JOIN membro m ON mg.remetente_id = m.id 
          WHERE m.grupo_id = g.id) as total_posts,
 
-        -- Verifica se sou membro
+        -- Verifica se o utilizador logado é membro (devolve 1 ou 0)
         (SELECT COUNT(*) FROM membro m WHERE m.grupo_id = g.id AND m.remetente_id = ?) as is_am_member
 
        FROM grupo g
@@ -34,17 +42,19 @@ export async function GET(req: NextRequest) {
       [userId] 
     );
 
-    // Formata para o Frontend
-    const formattedGroups = rows.map((group) => ({
+    // ---------------------------------------------------------
+    // 2. FORMATAÇÃO PARA O FRONTEND
+    // ---------------------------------------------------------
+    const formattedGroups = rows.map((group: any) => ({
       id: group.id,
       name: group.nome,
       description: group.descricao,
       subject: group.tipo ? (group.tipo.charAt(0).toUpperCase() + group.tipo.slice(1)) : "Geral",
       year: group.data_criacao ? new Date(group.data_criacao).getFullYear().toString() : "2024",
-      avatar: "", 
+      avatar: "",
       memberCount: group.total_membros,
-      posts: group.total_posts, // Agora vai funcionar
-      isJoined: group.is_am_member > 0, 
+      posts: group.total_posts, 
+      isJoined: group.is_am_member > 0,
     }));
 
     return NextResponse.json(formattedGroups);

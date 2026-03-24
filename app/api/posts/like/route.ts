@@ -3,13 +3,16 @@ import pool from "@/db";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
+// =========================================================================
+// POST: Adicionar ou remover um "Gosto" (Like/Unlike) numa publicação
+// =========================================================================
 export async function POST(req: Request) {
   try {
+    // ---------------------------------------------------------
+    // 1. RECEBER E VALIDAR O ID DO POST
+    // ---------------------------------------------------------
     const { postId } = await req.json();
-
-   
     const idRegex = /^\d+$/;
-    
     if (!postId || !idRegex.test(String(postId))) {
       return NextResponse.json(
         { error: "ID do post inválido." }, 
@@ -17,8 +20,12 @@ export async function POST(req: Request) {
       );
     }
 
+    // ---------------------------------------------------------
+    // 2. VERIFICAR AUTENTICAÇÃO 
+    // ---------------------------------------------------------
     const cookieStore = cookies();
     const token = cookieStore.get("token")?.value;
+
 
     if (!token) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
@@ -27,57 +34,69 @@ export async function POST(req: Request) {
     let userId: number;
     
     try {
-      const secret = "EDUCONNECT_SECRET_2024"; // Mesma chave usada no login
+
+      const secret = "EDUCONNECT_SECRET_2024";
       const decoded: any = jwt.verify(token, secret);
       userId = decoded.id;
     } catch (e) {
+
       return NextResponse.json({ error: "Sessão inválida" }, { status: 401 });
     }
 
-
+    // ---------------------------------------------------------
+    // 3. LIGAR À BASE DE DADOS
+    // ---------------------------------------------------------
     const connection = await pool.getConnection();
 
     try {
-     
+      // ---------------------------------------------------------
+      // 4. BUSCAR O POST ORIGINAL
+      // ---------------------------------------------------------
       const [rows]: any = await connection.execute(
         'SELECT conteudo FROM mensagem WHERE id = ?', 
         [postId]
       );
-      
       if (rows.length === 0) {
         return NextResponse.json({ error: 'Post não encontrado' }, { status: 404 });
       }
 
+      // ---------------------------------------------------------
+      // 5. PROCESSAR O CONTEÚDO (Lógica JSON)
+      // ---------------------------------------------------------
       let contentObj;
       try {
         contentObj = JSON.parse(rows[0].conteudo);
       } catch {
-
         contentObj = { texto_principal: rows[0].conteudo, likes: [], comentarios: [] };
       }
-
-
       if (!Array.isArray(contentObj.likes)) {
         contentObj.likes = [];
       }
 
-
       const numericUserId = Number(userId);
 
+      // ---------------------------------------------------------
+      // 6. LÓGICA DE TOGGLE (LIKE / UNLIKE)
+      // ---------------------------------------------------------
+    
       if (contentObj.likes.includes(numericUserId)) {
-
         contentObj.likes = contentObj.likes.filter((id: number) => id !== numericUserId);
       } else {
-
         contentObj.likes.push(numericUserId);
       }
 
+      // ---------------------------------------------------------
+      // 7. GUARDAR NA BASE DE DADOS
+      // ---------------------------------------------------------
 
       await connection.execute(
         'UPDATE mensagem SET conteudo = ? WHERE id = ?',
         [JSON.stringify(contentObj), postId]
       );
 
+      // ---------------------------------------------------------
+      // 8. ENVIAR RESPOSTA AO FRONTEND
+      // ---------------------------------------------------------
       return NextResponse.json({ 
         success: true, 
         likesCount: contentObj.likes.length,

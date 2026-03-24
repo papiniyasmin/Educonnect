@@ -158,7 +158,7 @@ export default function NotificationsPage() {
             <Link href="/friends/requests"><UserPlus size={20} /></Link>
             
             {/* O ícone do sino fica verde (ativo) nesta página */}
-            <Link href="/notifications" className={styles.activeIcon}>
+            <Link href="/notification" className={styles.activeIcon}>
                <Bell size={20} />
                {unreadCount > 0 && <span className={styles.badge}></span>}
             </Link>

@@ -168,7 +168,7 @@ export default function FriendRequestsPage() {
                <UserPlus size={20} />
                {requests.length > 0 && <span className={styles.badge}></span>}
             </Link>
-            <Link href="/notifications"><Bell size={20} /></Link>
+            <Link href="/notification"><Bell size={20} /></Link>
             <Link href="/settings"><Settings size={20} /></Link>
             
             <Link href="/profile">

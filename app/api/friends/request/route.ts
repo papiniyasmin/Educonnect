@@ -1,21 +1,25 @@
 import { NextResponse, NextRequest } from 'next/server';
-import pool from "@/db";
+import pool from "@/db"; // A ligação à base de dados
 import jwt from 'jsonwebtoken';
 
+// Constante global para a chave secreta, assim não repetimos código!
 const JWT_SECRET = process.env.JWT_SECRET || "EDUCONNECT_SECRET_2024";
 
 // =================================================================================
-// GET: LISTAR PEDIDOS RECEBIDOS (Para mostrar no "Sino" ou na página de Amigos)
+// GET: LISTAR PEDIDOS RECEBIDOS 
 // =================================================================================
 export async function GET(req: NextRequest) {
   try {
+    // ---------------------------------------------------------
+    // 1. AUTENTICAÇÃO
+    // ---------------------------------------------------------
     const token = req.cookies.get('token')?.value;
     if (!token) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
     let myId;
     try {
       const decoded: any = jwt.verify(token, JWT_SECRET);
-      myId = decoded.id;
+      myId = decoded.id; // Quem sou eu?
     } catch (e) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
@@ -23,7 +27,12 @@ export async function GET(req: NextRequest) {
     const connection = await pool.getConnection();
 
     try {
-      // Procura quem quer ser MEU amigo (eu sou o amigo_id)
+      // ---------------------------------------------------------
+      // 2. BUSCAR PEDIDOS PENDENTES COM JOIN
+      // ---------------------------------------------------------
+      // Procura quem quer ser MEU amigo (eu sou o amigo_id e o estado é PENDENTE).
+      // O JOIN junta a tabela 'amizade' com a tabela 'utilizador' para trazer logo
+      // o nome, a foto e o curso de quem me enviou o pedido. Genial para o Frontend!
       const query = `
         SELECT 
           a.id, 
@@ -39,8 +48,10 @@ export async function GET(req: NextRequest) {
 
       const [rows]: any = await connection.execute(query, [myId]);
 
+      // Devolve a lista pronta a ser desenhada no ecrã (Sino de notificações)
       return NextResponse.json(rows);
     } finally {
+      // 3. Libertar a ligação
       connection.release();
     }
   } catch (error) {
@@ -54,6 +65,9 @@ export async function GET(req: NextRequest) {
 // =================================================================================
 export async function POST(req: NextRequest) {
   try {
+    // ---------------------------------------------------------
+    // 1. AUTENTICAÇÃO
+    // ---------------------------------------------------------
     const token = req.cookies.get('token')?.value;
     if (!token) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
@@ -65,13 +79,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
+    // ---------------------------------------------------------
+    // 2. VALIDAÇÃO DE DADOS
+    // ---------------------------------------------------------
     const { targetUserId } = await req.json();
 
     if (!targetUserId) {
       return NextResponse.json({ error: 'ID do utilizador em falta' }, { status: 400 });
     }
 
-    // Converter para números para evitar erros de comparação
     const myIdNum = Number(myId);
     const targetIdNum = Number(targetUserId);
 
@@ -82,7 +98,9 @@ export async function POST(req: NextRequest) {
     const connection = await pool.getConnection();
 
     try {
-      // 1. Verificar se já existe relação (em qualquer direção)
+      // ---------------------------------------------------------
+      // 3. VERIFICAR RELAÇÕES EXISTENTES (DUPLA DIREÇÃO)
+      // ---------------------------------------------------------
       const [existing]: any = await connection.execute(
         `SELECT id, estado FROM amizade 
          WHERE (utilizador_id = ? AND amigo_id = ?) 
@@ -92,18 +110,24 @@ export async function POST(req: NextRequest) {
 
       if (existing.length > 0) {
         const status = existing[0].estado;
+        
+        // Bloqueia se já são amigos ou se já há pedido pendente
         if (status === 'ACEITE') {
           return NextResponse.json({ error: 'Já são amigos!' }, { status: 409 });
         } else if (status === 'PENDENTE') {
           return NextResponse.json({ error: 'Já existe um pedido pendente.' }, { status: 409 });
+        
+        // Se a pessoa recusou no passado, damos uma segunda oportunidade!
+        // Apagamos a linha antiga (RECUSADA) para a query de INSERT em baixo funcionar limpinha.
         } else if (status === 'RECUSADA') {
-            // Opcional: Permitir reenviar se foi recusado, ou bloquear
-            // Aqui apagamos a recusa antiga para criar um novo pedido
             await connection.execute('DELETE FROM amizade WHERE id = ?', [existing[0].id]);
         }
       }
 
-      // 2. Criar o pedido (Eu peço -> Ele recebe)
+      // ---------------------------------------------------------
+      // 4. CRIAR O NOVO PEDIDO
+      // ---------------------------------------------------------
+      // Regista o pedido: Eu (utilizador_id) peço amizade a Ele (amigo_id)
       await connection.execute(
         `INSERT INTO amizade (utilizador_id, amigo_id, data, estado) 
          VALUES (?, ?, NOW(), 'PENDENTE')`,
@@ -113,6 +137,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Pedido de amizade enviado!' });
 
     } finally {
+      // 5. Libertar a ligação
       connection.release();
     }
   } catch (error) {

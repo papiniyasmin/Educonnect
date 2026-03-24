@@ -81,7 +81,6 @@ export default function SettingsPage() {
 
         const data = await res.json();
         
-        // Usamos a nossa função auxiliar para tratar o URL vindo da API
         const fetchedFotoUrl = getAvatarUrl(data.foto_url);
 
         setFormData({
@@ -126,6 +125,17 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setSaving(true);
+    
+    // ==========================================
+    // NOVA VALIDAÇÃO FRONTEND (Evita o erro 400)
+    // ==========================================
+    const validAnos = ['10º', '11º', '12º'];
+    if (!formData.ano_escolar || !validAnos.includes(formData.ano_escolar)) {
+      alert("❌ Por favor, vai à aba 'Académico' e seleciona um Ano Escolar (10º, 11º ou 12º) antes de guardar.");
+      setSaving(false);
+      return; // Pára a execução aqui e não envia para a API!
+    }
+
     try {
       const data = new FormData();
       Object.entries(formData).forEach(([key, value]) => {
@@ -180,7 +190,7 @@ export default function SettingsPage() {
           <div className={styles.userActions}>
             <Link href="/search"><Search className="w-5 h-5" /></Link>
             <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
-            <Link href="/notifications"><Bell className="w-5 h-5" /></Link>
+            <Link href="/notification"><Bell className="w-5 h-5" /></Link>
             <Link href="/settings" className="text-emerald-400"><Settings className="w-5 h-5" /></Link>
             <Link href="/profile">
               <Avatar className="w-8 h-8 border border-slate-700">
@@ -258,6 +268,16 @@ export default function SettingsPage() {
                       <div className={styles.inputGroup}>
                         <Label htmlFor="nome">Nome Completo</Label>
                         <Input id="nome" value={formData.nome} onChange={handleChange} />
+                      </div>
+                      {/* ADICIONADO: Campo Email */}
+                      <div className={styles.inputGroup}>
+                        <Label htmlFor="email">Email</Label>
+                        <Input id="email" type="email" value={formData.email} onChange={handleChange} />
+                      </div>
+                      {/* ADICIONADO: Campo Telefone */}
+                      <div className={styles.inputGroup}>
+                        <Label htmlFor="telefone">Telefone</Label>
+                        <Input id="telefone" value={formData.telefone} onChange={handleChange} />
                       </div>
                       <div className={styles.inputGroup}>
                         <Label htmlFor="morada">Morada</Label>

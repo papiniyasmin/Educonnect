@@ -2,20 +2,41 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import pool from "@/db";
 import { RowDataPacket, ResultSetHeader } from "mysql2/promise";
-import { getUserId } from "@/lib/auth"; // <--- NOVO IMPORT
+import { getUserId } from "@/lib/auth"; // <--- ID SEGURO
 
+// ==========================================
+// INTERFACES (Para Type Safety)
+// ==========================================
+
+// Estrutura para a leitura das mensagens do grupo
+interface GroupMessageRow extends RowDataPacket {
+  id: number;
+  conteudo: string;
+  timestamp: string | Date;
+  senderId: number;
+  senderName: string;
+  senderAvatar: string | null;
+}
+
+// Estrutura para verificar o ID do membro
+interface MemberRow extends RowDataPacket {
+  id: number;
+}
+
+// ==========================================
 // GET: Buscar mensagens do grupo
+// ==========================================
 export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const userId = getUserId(); // <--- ID SEGURO
+  const userId = getUserId(); 
   const groupId = params.id;
 
   if (!userId) return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
 
   try {
-    const [rows] = await pool.query<RowDataPacket[]>(
+    const [rows] = (await pool.query(
       `SELECT 
         m.id,
         m.conteudo,
@@ -30,7 +51,7 @@ export async function GET(
        WHERE mb.grupo_id = ?
        ORDER BY m.data ASC`,
       [groupId]
-    );
+    )) as [GroupMessageRow[], any];
 
     return NextResponse.json({ messages: rows });
   } catch (err: any) {
@@ -39,12 +60,14 @@ export async function GET(
   }
 }
 
+// ==========================================
 // POST: Enviar mensagem para o grupo
+// ==========================================
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const userId = getUserId(); // <--- ID SEGURO
+  const userId = getUserId(); 
   const groupId = params.id;
   const { content } = await req.json();
 
@@ -54,14 +77,15 @@ export async function POST(
 
   try {
     // PASSO 1: Descobrir o ID DO MEMBRO deste utilizador neste grupo
-    const [membroRows] = await pool.query<RowDataPacket[]>(
+      const [membroRows] = (await pool.query(
       `SELECT id FROM membro 
        WHERE grupo_id = ? AND remetente_id = ?`, 
       [groupId, userId]
-    );
+    )) as [MemberRow[], any];
 
     const membro = membroRows[0];
 
+    // Segurança: Se não for membro, não pode enviar mensagem
     if (!membro) {
       return NextResponse.json(
         { error: "Não és membro deste grupo." }, 
@@ -69,16 +93,16 @@ export async function POST(
       );
     }
 
-    // PASSO 2: Inserir a mensagem
-    const [msgResult] = await pool.query<ResultSetHeader>(
+    // PASSO 2: Inserir a mensagem na tabela geral de mensagens
+    const [msgResult] = (await pool.query(
       `INSERT INTO mensagem (conteudo, data, titulo, tipo)
        VALUES (?, NOW(), 'Chat Grupo', 'experiencia')`,
       [content]
-    );
+    )) as [ResultSetHeader, any];
 
     const novaMensagemId = msgResult.insertId;
 
-    // PASSO 3: Ligar a mensagem ao membro
+    // PASSO 3: Ligar a mensagem ao membro específico que a enviou
     await pool.query(
       `INSERT INTO mensagem_grupo (mensagem_id, remetente_id)
        VALUES (?, ?)`,

@@ -178,7 +178,7 @@ export default function ChatPage() {
   <Link href="/settings"><Settings /></Link>
   
   {/* Link de Notificações isolado */}
-  <Link href="/notifications" className={styles.activeIcon}>
+  <Link href="/notification" className={styles.activeIcon}>
     <Bell className="w-5 h-5" />
   </Link>
   

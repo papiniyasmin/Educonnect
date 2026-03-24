@@ -111,7 +111,7 @@ export default function ProfilePage() {
           <div className={styles.userActions}>
             <Link href="/search"><Search className="w-5 h-5" /></Link>
             <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
-            <Link href="/notifications"><Bell className="w-5 h-5" /></Link>
+            <Link href="/notification"><Bell className="w-5 h-5" /></Link>
             <Link href="/settings"><Settings className="w-5 h-5" /></Link>
             <Link href="/profile" className={pathname === '/profile' ? "text-emerald-400" : ""}>
               <Avatar className="w-8 h-8 border border-slate-700">

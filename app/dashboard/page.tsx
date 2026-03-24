@@ -198,7 +198,7 @@ export default function DashboardPage() {
           <div className={styles.actions}>
             <Link href="/search"><Search className={styles.icon} /></Link>
             <Link href="/friends/requests"><UserPlus className={styles.icon} /></Link>
-            <Link href="/notifications"><Bell className={styles.icon} /></Link>
+            <Link href="/notification"><Bell className={styles.icon} /></Link>
             <Link href="/settings"><Settings className={styles.icon} /></Link>
             
             {/* Secção do Avatar atualizada */}

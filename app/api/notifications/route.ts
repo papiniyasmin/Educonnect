@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import pool from "@/db"; 
+import { getUserId } from "@/lib/auth"; // <--- Importamos a tua função mágica de autenticação
 
-
+// =========================================================================
+// GET: Vai buscar as notificações mais recentes do utilizador logado
+// =========================================================================
 export async function GET(request: Request) {
   try {
+    const utilizadorLogadoId = getUserId(); 
 
-    const utilizadorLogadoId = 1; 
+    if (!utilizadorLogadoId) {
+      return NextResponse.json({ error: "Não autorizado. Faça login." }, { status: 401 });
+    }
 
-    const [notificacoes] = await pool.query(`
+    const [notificacoes]: any = await pool.query(`
       SELECT 
         n.id, 
         n.tipo as type, 
@@ -23,25 +29,35 @@ export async function GET(request: Request) {
       LIMIT 20
     `, [utilizadorLogadoId]);
 
+    // Devolvemos a lista de notificações ao Frontend
     return NextResponse.json(notificacoes);
+    
   } catch (error) {
     console.error("Erro ao buscar notificações:", error);
     return NextResponse.json({ error: "Erro interno no servidor" }, { status: 500 });
   }
 }
 
-// PUT: Marca as notificações como lidas quando o utilizador clica no sino
+// =========================================================================
+// PUT: Marca as notificações do utilizador como "lidas"
+// =========================================================================
 export async function PUT(request: Request) {
   try {
-    const utilizadorLogadoId = 1; // Substituir pela lógica do utilizador logado
+    // 1. AUTENTICAÇÃO REAL
+    const utilizadorLogadoId = getUserId(); 
 
-    // Atualiza tudo o que é false (0) para true (1) para este utilizador
+    if (!utilizadorLogadoId) {
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+    }
+
+    // 2. ATUALIZAÇÃO
     await pool.query(
       `UPDATE notificacao SET lida = TRUE WHERE utilizador_id = ? AND lida = FALSE`,
       [utilizadorLogadoId]
     );
 
     return NextResponse.json({ success: true, message: "Notificações marcadas como lidas" });
+    
   } catch (error) {
     console.error("Erro ao atualizar notificações:", error);
     return NextResponse.json({ error: "Erro interno no servidor" }, { status: 500 });

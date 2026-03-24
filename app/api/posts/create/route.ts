@@ -5,23 +5,32 @@ import path from "path";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
+// =========================================================================
+// POST: Criar uma nova publicação (com texto e/ou imagem)
+// =========================================================================
 export async function POST(req: Request) {
   try {
-    // 1. Verificar Autenticação
+    // ---------------------------------------------------------
+    // 1. VERIFICAR AUTENTICAÇÃO (Quem está a publicar?)
+    // ---------------------------------------------------------
     const cookieStore = cookies();
     const token = cookieStore.get("token");
 
     if (!token) {
+   
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
     const decoded: any = jwt.verify(token.value, process.env.JWT_SECRET || "segredo");
     const userId = decoded.id; 
 
-    // 2. Receber dados
+    // ---------------------------------------------------------
+    // 2. RECEBER OS DADOS DO FRONTEND (FormData)
+    // ---------------------------------------------------------
     const formData = await req.formData();
     const content = formData.get("content") as string;
     const file = formData.get("image") as File | null;
+
 
     if (!content && !file) {
       return NextResponse.json({ error: "O post precisa de conteúdo ou imagem" }, { status: 400 });
@@ -29,34 +38,45 @@ export async function POST(req: Request) {
 
     let imageUrl = null;
 
-    // 3. Salvar Imagem no Disco (se houver)
+    // ---------------------------------------------------------
+    // 3. GUARDAR A IMAGEM NO DISCO 
+    // ---------------------------------------------------------
     if (file) {
+
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       
-      // Nome único: data + nome original (sem espaços)
+
       const filename = `${Date.now()}-${file.name.replaceAll(" ", "_")}`;
+      
+
       const uploadDir = path.join(process.cwd(), "public", "uploads");
       const filePath = path.join(uploadDir, filename);
 
+
       await writeFile(filePath, buffer);
+      
       imageUrl = `/uploads/${filename}`;
     }
 
-
+    // ---------------------------------------------------------
+    // 4. GUARDAR NA BASE DE DADOS
+    // ---------------------------------------------------------
     const [result]: any = await pool.query(
       `INSERT INTO mensagem (utilizador_id, conteudo, imagem, data) 
        VALUES (?, ?, ?, NOW())`,
       [userId, content, imageUrl]
     );
 
-   
+    // ---------------------------------------------------------
+    // 5. DEVOLVER O NOVO POST AO FRONTEND
+    // ---------------------------------------------------------
     return NextResponse.json({ 
       success: true, 
       post: {
         id: result.insertId,
         author: decoded.nome,
-        authorAvatar: "/avatars/default.png", 
+        authorAvatar: "/avatars/default.png",
         content: content,
         image: imageUrl,
         likes: 0,

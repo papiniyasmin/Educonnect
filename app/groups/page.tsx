@@ -344,7 +344,7 @@ export default function GroupsPage() {
             <div className={styles.userActions}>
                 <Link href="/search"><Search className="w-4 h-4 md:w-5 md:h-5" /></Link>
                  <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
-                <Link href="/notifications"><Bell className="w-4 h-4 md:w-5 md:h-5" /></Link>
+                <Link href="/notification"><Bell className="w-4 h-4 md:w-5 md:h-5" /></Link>
                 <Link href="/settings"><Settings className="w-4 h-4 md:w-5 md:h-5" /></Link>
                 
                 {/* Avatar Atualizado */}
