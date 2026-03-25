@@ -8,61 +8,54 @@ import jwt from "jsonwebtoken";
 // =========================================================================
 export async function POST(req: Request) {
   try {
-    // ---------------------------------------------------------
-    // 1. RECEBER E VALIDAR O ID DO POST
-    // ---------------------------------------------------------
     const { postId } = await req.json();
     const idRegex = /^\d+$/;
     if (!postId || !idRegex.test(String(postId))) {
-      return NextResponse.json(
-        { error: "ID do post inválido." }, 
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "ID do post inválido." }, { status: 400 });
     }
 
-    // ---------------------------------------------------------
-    // 2. VERIFICAR AUTENTICAÇÃO 
-    // ---------------------------------------------------------
     const cookieStore = cookies();
     const token = cookieStore.get("token")?.value;
-
 
     if (!token) {
       return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
 
     let userId: number;
-    
     try {
-
       const secret = "EDUCONNECT_SECRET_2024";
       const decoded: any = jwt.verify(token, secret);
       userId = decoded.id;
     } catch (e) {
-
       return NextResponse.json({ error: "Sessão inválida" }, { status: 401 });
     }
 
-    // ---------------------------------------------------------
-    // 3. LIGAR À BASE DE DADOS
-    // ---------------------------------------------------------
     const connection = await pool.getConnection();
 
     try {
-      // ---------------------------------------------------------
-      // 4. BUSCAR O POST ORIGINAL
-      // ---------------------------------------------------------
-      const [rows]: any = await connection.execute(
-        'SELECT conteudo FROM mensagem WHERE id = ?', 
-        [postId]
-      );
+      // =====================================================================
+      // PASSO 0: Buscar os dados do Post
+      // =====================================================================
+      const [rows]: any = await connection.execute(`
+        SELECT 
+          m.conteudo,
+          m.titulo,
+          COALESCE(mg.remetente_id, mgr.remetente_id, mp.remetente_id) AS dono_id
+        FROM mensagem m
+        LEFT JOIN mensagem_geral mg ON m.id = mg.mensagem_id
+        LEFT JOIN mensagem_grupo mgr ON m.id = mgr.mensagem_id
+        LEFT JOIN mensagem_particular mp ON m.id = mp.mensagem_id
+        WHERE m.id = ?
+      `, [postId]);
+
       if (rows.length === 0) {
         return NextResponse.json({ error: 'Post não encontrado' }, { status: 404 });
       }
 
-      // ---------------------------------------------------------
-      // 5. PROCESSAR O CONTEÚDO (Lógica JSON)
-      // ---------------------------------------------------------
+      // Guardamos o dono da publicação e o título (com um fallback caso seja nulo)
+      const postOwnerId = rows[0].dono_id; 
+      const postTitle = rows[0].titulo || "uma publicação";
+
       let contentObj;
       try {
         contentObj = JSON.parse(rows[0].conteudo);
@@ -74,33 +67,48 @@ export async function POST(req: Request) {
       }
 
       const numericUserId = Number(userId);
+      
 
-      // ---------------------------------------------------------
-      // 6. LÓGICA DE TOGGLE (LIKE / UNLIKE)
-      // ---------------------------------------------------------
+      const isLiking = !contentObj.likes.includes(numericUserId);
+
+      if (!isLiking) {
     
-      if (contentObj.likes.includes(numericUserId)) {
         contentObj.likes = contentObj.likes.filter((id: number) => id !== numericUserId);
       } else {
+     
         contentObj.likes.push(numericUserId);
       }
 
-      // ---------------------------------------------------------
-      // 7. GUARDAR NA BASE DE DADOS
-      // ---------------------------------------------------------
-
+      // =====================================================================
+      // PASSO 1: Atualizar o Post com o novo Like (Isto garante que não desaparece)
+      // =====================================================================
       await connection.execute(
         'UPDATE mensagem SET conteudo = ? WHERE id = ?',
         [JSON.stringify(contentObj), postId]
       );
 
-      // ---------------------------------------------------------
-      // 8. ENVIAR RESPOSTA AO FRONTEND
-      // ---------------------------------------------------------
+      // =====================================================================
+      // PASSO 2: Criar a Notificação
+      // =====================================================================
+      try {
+        if (isLiking && postOwnerId && postOwnerId !== numericUserId) {
+          
+          // Criamos a frase personalizada com o título do post
+          const textoNotificacao = `gostou do teu post sobre ${postTitle}.`;
+          await connection.execute(
+            `INSERT INTO notificacao (utilizador_id, remetente_id, tipo, conteudo, lida) 
+             VALUES (?, ?, 'like', ?, 0)`,
+            [postOwnerId, numericUserId, textoNotificacao]
+          );
+        }
+      } catch (notifError) {
+        console.error(" ERRO A CRIAR NOTIFICAÇÃO DO LIKE:", notifError);
+      }
+
       return NextResponse.json({ 
         success: true, 
         likesCount: contentObj.likes.length,
-        isLiked: contentObj.likes.includes(numericUserId)
+        isLiked: isLiking // Devolver estado atualizado
       });
 
     } finally {

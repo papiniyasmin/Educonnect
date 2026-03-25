@@ -1,4 +1,4 @@
-"use client";
+"use client"; 
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
@@ -12,12 +12,16 @@ import {
 } from "lucide-react";
 import styles from "./chat.module.scss";
 
+// =========================================================================
+// INTERFACES (Tipagens do TypeScript para garantir que os dados têm o formato certo)
+// =========================================================================
+
 interface ChatItem {
   id: number;
   name: string;
   avatar: string | null;
-  type: 'private' | 'group';
-  subtitle?: string;
+  type: 'private' | 'group'; // Define se é um chat com uma pessoa ou um grupo
+  subtitle?: string; // Última mensagem ou tipo de grupo para mostrar na lista lateral
 }
 
 interface Message {
@@ -27,7 +31,7 @@ interface Message {
   senderId: number;
   senderName?: string;
   senderAvatar?: string;
-  isMine: boolean;
+  isMine: boolean; // Flag crucial para saber se a mensagem fica à direita (minha) ou à esquerda (deles)
 }
 
 interface User {
@@ -37,15 +41,20 @@ interface User {
 }
 
 export default function ChatPage() {
-  // --- Estados ---
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [chatList, setChatList] = useState<ChatItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'private' | 'group'>('private');
+  // =========================================================================
+  // ESTADOS (Variáveis que, quando mudam, fazem o ecrã atualizar)
+  // =========================================================================
+  
+  const [currentUser, setCurrentUser] = useState<User | null>(null); 
+  const [chatList, setChatList] = useState<ChatItem[]>([]); 
+  const [activeTab, setActiveTab] = useState<'private' | 'group'>('private'); 
   const [selectedChat, setSelectedChat] = useState<ChatItem | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
 
   const getInitials = (name: string | undefined) => {
     if (!name) return "U"; 
@@ -56,7 +65,11 @@ export default function ChatPage() {
     return name.substring(0, 2).toUpperCase();
   };
 
-  // --- Effects ---
+  // =========================================================================
+  // EFFECTS (Ações que correm em momentos específicos do ciclo de vida do componente)
+  // =========================================================================
+
+  // 1. Executa APENAS UMA VEZ ao carregar a página: Vai buscar quem é o utilizador logado
   useEffect(() => {
     fetch("/api/user/settings")
       .then(res => res.json())
@@ -72,12 +85,14 @@ export default function ChatPage() {
       .catch(err => console.error("Erro ao carregar user:", err));
   }, []);
 
+  // 2. Executa sempre que a aba ('private' ou 'group') muda: Atualiza a lista lateral
   useEffect(() => {
-    setChatList([]); 
+    setChatList([]); // Limpa a lista antes de carregar a nova para não mostrar dados antigos
     fetch(`/api/chat/list?type=${activeTab}`)
       .then(res => res.json())
       .then(data => {
         if (data.items) {
+          // Mapeia os dados da BD para o formato que o Frontend espera (ChatItem)
           setChatList(data.items.map((item: any) => ({
             id: item.id,
             name: item.nome, 
@@ -90,9 +105,10 @@ export default function ChatPage() {
       .catch(err => console.error("Erro ao carregar lista:", err));
   }, [activeTab]);
 
+  // 3. Executa sempre que clicas num chat diferente: Carrega o histórico de mensagens
   useEffect(() => {
-    if (!selectedChat || !currentUser) return;
-    setMessages([]); 
+    if (!selectedChat || !currentUser) return; 
+    setMessages([]);
 
     fetch(`/api/chat/messages?type=${selectedChat.type}&id=${selectedChat.id}`)
       .then(res => res.json())
@@ -115,20 +131,27 @@ export default function ChatPage() {
       .catch(err => console.error("Erro ao carregar mensagens:", err));
   }, [selectedChat, currentUser]);
 
+  // 4. Executa sempre que a lista de mensagens sofre alterações: Faz scroll para a última mensagem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // --- Handlers ---
+  // =========================================================================
+  // HANDLERS (Funções acionadas por eventos do utilizador)
+  // =========================================================================
+
+  // Função para enviar uma nova mensagem
   const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); //
     if (!newMessage.trim() || !selectedChat || !currentUser) return;
 
     const contentToSend = newMessage;
     setNewMessage(""); 
 
+    // OPTIMISTIC UI: Adiciona a mensagem ao ecrã ANTES de o servidor responder.
+    // Dá a sensação de que a app é super rápida.
     const optimisticMsg: Message = {
-      id: Date.now(),
+      id: Date.now(), 
       content: contentToSend,
       timestamp: new Date().toISOString(),
       senderId: currentUser.id,
@@ -137,6 +160,7 @@ export default function ChatPage() {
     };
     setMessages(prev => [...prev, optimisticMsg]);
 
+    // Envia o pedido real para a base de dados em background
     try {
       await fetch("/api/chat/messages", { 
         method: "POST",
@@ -149,58 +173,67 @@ export default function ChatPage() {
       });
     } catch (error) {
       console.error("Erro ao enviar:", error);
+    
     }
   };
 
+  // =========================================================================
+  // RENDERIZAÇÃO DO JSX (A interface visual)
+  // =========================================================================
   return (
     <div className={styles.container}>
-      {/* HEADER DESKTOP */}
+      
+      {/* HEADER DESKTOP (Topo da página) */}
       <header className={styles.header}>
         <div className={styles.headerInner}>
-         <Link href="/" className={styles.logoLink}>
-                      <Image 
-                        src="/logo.png" 
-                        alt="Logo EduConnect" 
-                        width={160} // Dimensão base para a qualidade
-                        height={40} // Dimensão base para a qualidade
-                        priority
-                        className={styles.logoImage} // A classe que criámos no SCSS
-                      />
-                    </Link>
+          <Link href="/" className={styles.logoLink}>
+            <Image 
+              src="/logo.png" 
+              alt="Logo EduConnect" 
+              width={160} 
+              height={40} 
+              priority
+              className={styles.logoImage} 
+            />
+          </Link>
+          
           <nav className={styles.desktopNav}>
             <Link href="/dashboard">Feed</Link>
             <Link href="/groups">Grupos</Link>
             <Link href="/chat" className={styles.activeLink}>Chat</Link>
           </nav>
+          
           <div className={styles.actions}>
-  <Link href="/search"><Search /></Link>
-  <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
-  <Link href="/settings"><Settings /></Link>
-  
-  {/* Link de Notificações isolado */}
-  <Link href="/notification" className={styles.activeIcon}>
-    <Bell className="w-5 h-5" />
-  </Link>
-  
-  {/* Link de Perfil isolado */}
-  <Link href="/profile">
-    <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">
-      {currentUser?.avatar && <AvatarImage src={currentUser.avatar} />}
-      <AvatarFallback className="bg-emerald-600 text-white text-xs">
-          {getInitials(currentUser?.name)}
-      </AvatarFallback>
-    </Avatar>
-  </Link>
-  
-  <Link href="/login"><LogOut /></Link>
+            <Link href="/search"><Search /></Link>
+            <Link href="/friends/requests"><UserPlus className="w-5 h-5" /></Link>
+            <Link href="/settings"><Settings /></Link>
+            
+            <Link href="/notification" className={styles.activeIcon}>
+              <Bell className="w-5 h-5" />
+            </Link>
+            
+            <Link href="/profile">
+              <Avatar className="w-8 h-8 cursor-pointer border border-slate-700">
+                {currentUser?.avatar && <AvatarImage src={currentUser.avatar} />}
+                <AvatarFallback className="bg-emerald-600 text-white text-xs">
+                    {getInitials(currentUser?.name)}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+            
+            <Link href="/login"><LogOut /></Link>
           </div>
         </div>
       </header>
 
+      {/* ÁREA PRINCIPAL DO CHAT */}
       <div className={styles.mainContent}>
         
-        {/* SIDEBAR (Esconde no mobile se houver um chat selecionado) */}
+        {/* ================= BARRA LATERAL (LISTA DE CHATS) ================= */}
+        {/* A classe 'hiddenOnMobile' esconde a lista nos telemóveis se houver um chat aberto */}
         <div className={`${styles.sidebar} ${selectedChat ? styles.hiddenOnMobile : ""}`}>
+          
+          {/* Botões para alternar entre conversas Privadas e de Grupo */}
           <div className={styles.tabs}>
             <button 
               onClick={() => { setActiveTab('private'); setSelectedChat(null); }}
@@ -211,44 +244,56 @@ export default function ChatPage() {
               className={activeTab === 'group' ? styles.activeTab : ''}
             >Grupos</button>
           </div>
+          
+          {/* Lista scrollável de conversas */}
           <div className={styles.chatList}>
             {chatList.map((chat) => (
-              <div key={chat.id} onClick={() => setSelectedChat(chat)}
+              <div 
+                key={chat.id} 
+                onClick={() => setSelectedChat(chat)} // Define o chat clicado como ativo
                 className={`${styles.chatItem} ${selectedChat?.id === chat.id && selectedChat?.type === chat.type ? styles.selected : ""}`}
               >
+                {/* Foto / Iniciais do utilizador ou grupo */}
                 <Avatar>
                   <AvatarImage src={chat.avatar || ""} />
                   <AvatarFallback className="bg-slate-700 text-slate-300">
                     {chat.type === 'group' ? <Users size={16}/> : getInitials(chat.name)}
                   </AvatarFallback>
                 </Avatar>
+                
                 <div className={styles.chatInfo}>
                   <h4>{chat.name}</h4>
                   <p>{chat.subtitle || "Sem mensagens"}</p>
                 </div>
               </div>
             ))}
+            
+            {/* Mensagem de estado vazio (se não tiver amigos/grupos) */}
             {chatList.length === 0 && (
               <p className={styles.emptyList}>{activeTab === 'private' ? "Nenhuma conversa." : "Nenhum grupo."}</p>
             )}
           </div>
         </div>
 
-        {/* JANELA DE CHAT (Esconde no mobile se NÃO houver chat selecionado) */}
+        {/* ================= JANELA DO CHAT ATIVO (DIREITA) ================= */}
+        {/* Escondida nos telemóveis se NÃO houver nenhum chat selecionado (mostra a lista) */}
         <div className={`${styles.chatWindow} ${!selectedChat ? styles.hiddenOnMobile : ""}`}>
+          
           {selectedChat ? (
             <>
+              {/* CABEÇALHO DO CHAT */}
               <div className={styles.chatHeader}>
-                {/* Botão de Voltar (Só aparece no mobile) */}
+                {/* Botão Voltar: Muito importante para UX em dispositivos móveis (Mobile) */}
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   className={styles.backBtn}
-                  onClick={() => setSelectedChat(null)}
+                  onClick={() => setSelectedChat(null)} // Tira o chat selecionado, voltando à lista
                 >
                   <ChevronLeft size={24} />
                 </Button>
 
+                {/* Avatar e Informações de quem estamos a falar */}
                 <Avatar>
                   <AvatarImage src={selectedChat.avatar || ""} />
                   <AvatarFallback className="bg-slate-700 text-slate-300">
@@ -261,31 +306,42 @@ export default function ChatPage() {
                 </div>
               </div>
 
+              {/* LISTA DE MENSAGENS */}
               <div className={styles.messagesContainer}>
                 {messages.map((msg, idx) => (
                   <div key={idx} className={`${styles.messageRow} ${msg.isMine ? styles.mine : styles.theirs}`}>
+                    
+                    {/* Se for num grupo e a mensagem não for minha, mostra o nome de quem enviou */}
                     {selectedChat.type === 'group' && !msg.isMine && (
                       <span className={styles.senderName}>{msg.senderName}</span>
                     )}
+                    
+                    {/* A bolha da mensagem */}
                     <div className={styles.bubble}>{msg.content}</div>
+                    
+                    {/* A hora da mensagem formatada (ex: 14:30) */}
                     <span className={styles.timestamp}>
                       {new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
                     </span>
                   </div>
                 ))}
+                
+                {/* Esta div invisível serve como âncora para o scroll descer até ao fim automaticamente */}
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* ÁREA DE INPUT (Onde se escreve) */}
               <div className={styles.inputArea}>
                 <form onSubmit={handleSendMessage}>
                   <Input
                     value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    onChange={(e) => setNewMessage(e.target.value)} // Atualiza o estado enquato se escreve
                     placeholder="Escreva a sua mensagem..."
                     className={styles.inputField}
                     disabled={!currentUser} 
                     autoComplete="off"
                   />
+                  {/* Botão desativo se não houver texto ou utilizador */}
                   <Button type="submit" className={styles.sendBtn} disabled={!currentUser || !newMessage.trim()} size="icon">
                     <Send size={18} />
                   </Button>
@@ -293,6 +349,7 @@ export default function ChatPage() {
               </div>
             </>
           ) : (
+            // ESTADO VAZIO (Nenhum chat selecionado na versão Desktop)
             <div className={styles.emptyState}>
               <MessageCircle size={64} strokeWidth={1.5} />
               <p>Selecione uma conversa ou grupo para começar.</p>
@@ -301,7 +358,7 @@ export default function ChatPage() {
         </div> 
       </div>
 
-      {/* FOOTER MOBILE NAV */}
+      {/* FOOTER NAV PARA DISPOSITIVOS MÓVEIS */}
       <footer className={styles.mobileNav}>
         <div className={styles.navContent}>
           <Link href="/dashboard">
@@ -312,6 +369,7 @@ export default function ChatPage() {
             <Users className="w-5 h-5" />
             <span>Grupos</span>
           </Link>
+          {/* Notei que aqui o ícone do Chat é um Bell (Sino). Podes querer trocar para MessageCircle no futuro */}
           <Link href="/chat" className={styles.activeLink}>
             <Bell className="w-5 h-5" />
             <span>Chat</span>

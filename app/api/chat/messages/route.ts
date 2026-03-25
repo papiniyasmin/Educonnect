@@ -68,6 +68,7 @@ export async function GET(req: NextRequest) {
 
 // ==========================================
 // 2. POST: GUARDAR A NOVA MENSAGEM NA BD
+// E CRIAR NOTIFICAÇÕES AUTOMÁTICAS
 // ==========================================
 export async function POST(req: NextRequest) {
   // 1. Valida a segurança
@@ -85,9 +86,9 @@ export async function POST(req: NextRequest) {
 
   try {
     // TRUQUE PARA A BD NÃO DAR ERRO: Usar 'experiencia' e um título automático
-    // (Útil para contornar campos que sejam NOT NULL noutras partes do sistema)
     const tituloMsg = body.type === 'group' ? 'Mensagem de Grupo' : 'Mensagem Privada';
 
+    // GUARDA A MENSAGEM NA TABELA PRINCIPAL
     const [msgResult] = (await pool.query(
       `INSERT INTO mensagem (conteudo, data, titulo, tipo) VALUES (?, NOW(), ?, ?)`,
       [body.content, tituloMsg, 'experiencia']
@@ -96,6 +97,9 @@ export async function POST(req: NextRequest) {
     const novaMensagemId = msgResult.insertId; // Guarda o ID da mensagem acabada de criar
 
     if (body.type === 'group') {
+      // ==========================================
+      // LÓGICA DE GRUPO
+      // ==========================================
       
       // Buscar o ID de membro (Na coluna utilizador chama-se remetente_id na tabela membro)
       const [membros] = (await pool.query(
@@ -109,17 +113,55 @@ export async function POST(req: NextRequest) {
           `INSERT INTO mensagem_grupo (remetente_id, mensagem_id) VALUES (?, ?)`,
           [membros[0].id, novaMensagemId]
         );
+
+        // --- NOTIFICAÇÕES DE GRUPO ---
+        try {
+          // Ir buscar o nome do grupo
+          const [grupoInfo] = (await pool.query(
+            `SELECT nome FROM grupo WHERE id = ? LIMIT 1`, 
+            [body.targetId]
+          )) as [RowDataPacket[], any];
+          
+          const nomeGrupo = grupoInfo.length > 0 ? grupoInfo[0].nome : "um grupo";
+          const textoNotificacao = `enviou uma nova mensagem no grupo ${nomeGrupo}.`;
+
+          // Insere notificações para todos os membros do grupo, EXCETO quem enviou
+          await pool.query(
+            `INSERT INTO notificacao (utilizador_id, remetente_id, tipo, conteudo, lida)
+             SELECT remetente_id, ?, 'mensagem_grupo', ?, 0
+             FROM membro
+             WHERE grupo_id = ? AND remetente_id != ?`,
+            [userId, textoNotificacao, body.targetId, userId]
+          );
+        } catch (notifErr) {
+          console.error("Erro a gerar notificações de grupo:", notifErr);
+        }
+
       } else {
         return NextResponse.json({ error: "Não és membro deste grupo" }, { status: 403 });
       }
 
     } else {
+      // ==========================================
+      // LÓGICA DE MENSAGEM PRIVADA
+      // ==========================================
       
       // MENSAGEM PARTICULAR: Insere a relação de quem enviou e quem recebe
       await pool.query(
         `INSERT INTO mensagem_particular (remetente_id, destinatario_id, mensagem_id) VALUES (?, ?, ?)`,
         [userId, body.targetId, novaMensagemId]
       );
+      
+      // --- NOTIFICAÇÃO PRIVADA ---
+      try {
+        await pool.query(
+          `INSERT INTO notificacao (utilizador_id, remetente_id, tipo, conteudo, lida) 
+           VALUES (?, ?, 'mensagem_privada', 'enviou-te uma nova mensagem.', 0)`,
+          [body.targetId, userId]
+        );
+      } catch (notifErr) {
+        console.error("Erro a gerar notificação privada:", notifErr);
+      }
       
     }
 

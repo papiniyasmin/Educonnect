@@ -7,17 +7,11 @@ import jwt from 'jsonwebtoken';
 // =========================================================================
 export async function POST(req: NextRequest) {
   try {
-    // ---------------------------------------------------------
-    // 1. OBTER O TOKEN DO COOKIE
-    // ---------------------------------------------------------
     const token = req.cookies.get('token')?.value;
     if (!token) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    // ---------------------------------------------------------
-    // 2. VERIFICAR O TOKEN (AUTENTICAÇÃO)
-    // ---------------------------------------------------------
     let myId;
     try {
       const secret = process.env.JWT_SECRET || "EDUCONNECT_SECRET_2024";
@@ -27,38 +21,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    // ---------------------------------------------------------
-    // 3. LER DADOS DO FRONTEND E VALIDAR (REGEX)
-    // ---------------------------------------------------------
     const { postId, content } = await req.json();
 
-    // A. Validar se o comentário é vazio
     const contentRegex = /\S/; 
     if (!content || !contentRegex.test(content)) {
-      return NextResponse.json(
-        { error: 'O comentário não pode estar vazio.' }, 
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'O comentário não pode estar vazio.' }, { status: 400 });
     }
 
-    // B. Validar se o postId é mesmo um número
     const idRegex = /^\d+$/;
     if (!postId || !idRegex.test(String(postId))) {
-      return NextResponse.json(
-        { error: 'ID do post inválido.' }, 
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'ID do post inválido.' }, { status: 400 });
     }
 
-    // ---------------------------------------------------------
-    // PREPARAR A LIGAÇÃO À BASE DE DADOS
-    // ---------------------------------------------------------
     const connection = await pool.getConnection();
 
     try {
-      // ---------------------------------------------------------
-      // 4. BUSCAR DADOS DO AUTOR (QUEM ESTÁ A COMENTAR)
-      // ---------------------------------------------------------
       const [userRows]: any = await connection.execute(
         'SELECT nome, foto_url FROM utilizador WHERE id = ?', 
         [myId]
@@ -70,21 +47,28 @@ export async function POST(req: NextRequest) {
 
       const author = userRows[0];
 
-      // ---------------------------------------------------------
-      // 5. BUSCAR O POST ORIGINAL NA BASE DE DADOS
-      // ---------------------------------------------------------
-      const [msgRows]: any = await connection.execute(
-        'SELECT conteudo FROM mensagem WHERE id = ?', 
-        [postId]
-      );
+      // =====================================================================
+      // MODIFICAÇÃO: A query mágica para encontrar o dono e o título do post!
+      // =====================================================================
+      const [msgRows]: any = await connection.execute(`
+        SELECT 
+          m.conteudo,
+          m.titulo,
+          COALESCE(mg.remetente_id, mgr.remetente_id, mp.remetente_id) AS dono_id
+        FROM mensagem m
+        LEFT JOIN mensagem_geral mg ON m.id = mg.mensagem_id
+        LEFT JOIN mensagem_grupo mgr ON m.id = mgr.mensagem_id
+        LEFT JOIN mensagem_particular mp ON m.id = mp.mensagem_id
+        WHERE m.id = ?
+      `, [postId]);
       
       if (msgRows.length === 0) {
         return NextResponse.json({ error: 'Post não encontrado' }, { status: 404 });
       }
 
-      // ---------------------------------------------------------
-      // 6. PROCESSAR O CONTEÚDO JSON DO POST
-      // ---------------------------------------------------------
+      const postOwnerId = msgRows[0].dono_id;
+      const postTitle = msgRows[0].titulo || "uma publicação"; 
+
       let contentObj;
       try {
         contentObj = JSON.parse(msgRows[0].conteudo);
@@ -95,9 +79,6 @@ export async function POST(req: NextRequest) {
         contentObj.comentarios = [];
       }
 
-      // ---------------------------------------------------------
-      // 7. CRIAR O NOVO COMENTÁRIO
-      // ---------------------------------------------------------
       const newComment = {
         id: Date.now(),
         content: content.trim(), 
@@ -108,24 +89,38 @@ export async function POST(req: NextRequest) {
 
       contentObj.comentarios.push(newComment);
 
-      // ---------------------------------------------------------
-      // 8. ATUALIZAR O POST NA BASE DE DADOS
-      // ---------------------------------------------------------
+      // =====================================================================
+      // PASSO 1: Atualizar o Post com o novo Comentário
+      // =====================================================================
       await connection.execute(
         'UPDATE mensagem SET conteudo = ? WHERE id = ?',
         [JSON.stringify(contentObj), postId]
       );
 
-      // ---------------------------------------------------------
-      // 9. ENVIAR RESPOSTA FINAL AO FRONTEND
-      // ---------------------------------------------------------
+      // =====================================================================
+      // PASSO 2: CRIAR A NOTIFICAÇÃO SE NÃO FOR O PRÓPRIO A COMENTAR
+      // =====================================================================
+      try {
+        if (postOwnerId && postOwnerId !== myId) {
+          const textoNotificacao = `comentou no teu post sobre ${postTitle}.`;
+
+          await connection.execute(
+            `INSERT INTO notificacao (utilizador_id, remetente_id, tipo, conteudo, lida) 
+             VALUES (?, ?, 'comment', ?, 0)`,
+            [postOwnerId, myId, textoNotificacao]
+          );
+        }
+      } catch (notifError) {
+        console.error(" ERRO A CRIAR NOTIFICAÇÃO DO COMENTÁRIO:", notifError);
+      }
+      // =====================================================================
+
       return NextResponse.json(newComment, { status: 200 });
 
     } finally {
       connection.release();
     }
   } catch (error) {
-   
     console.error("Erro Crítico na API de Comentários:", error);
     return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
   }

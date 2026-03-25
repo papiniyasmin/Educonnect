@@ -10,6 +10,10 @@ import {
 
 import styles from "./notification.module.scss"
 
+// =========================================================================
+// INTERFACES (Tipagens do TypeScript para estrutura de dados)
+// =========================================================================
+
 interface User {
   id: number
   name: string
@@ -20,15 +24,19 @@ interface User {
 
 interface Notification {
   id: number
-  type: string
-  content: string
-  is_read: number | boolean
+  type: string // Ex: "LIKE", "COMENTARIO", "PEDIDO_AMIZADE"
+  content: string // O texto da notificação
+  is_read: number | boolean // Flag que diz se o utilizador já viu a notificação (0 ou 1, false ou true)
   created_at: string
-  actor_name: string
-  actor_avatar: string | null
+  actor_name: string // O nome de quem gerou a notificação (ex: "João Santos")
+  actor_avatar: string | null // A foto de quem gerou
 }
 
-// --- FUNÇÕES AUXILIARES ---
+// =========================================================================
+// FUNÇÕES AUXILIARES
+// =========================================================================
+
+// Extrai as iniciais do nome caso o utilizador não tenha uma foto de perfil
 const getInitials = (name: string | undefined) => {
   if (!name) return "U"; 
   const names = name.trim().split(" ");
@@ -38,6 +46,7 @@ const getInitials = (name: string | undefined) => {
   return name.substring(0, 2).toUpperCase();
 };
 
+// Constrói o caminho correto da imagem de perfil (links externos, base64 ou pasta local uploads)
 const getAvatarUrl = (url: string | undefined | null) => {
   if (!url) return "";
   if (url.startsWith("http") || url.startsWith("data:")) {
@@ -47,12 +56,21 @@ const getAvatarUrl = (url: string | undefined | null) => {
 };
 
 export default function NotificationsPage() {
-  const [user, setUser] = useState<User | null>(null)
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  // =========================================================================
+  // ESTADOS DO COMPONENTE
+  // =========================================================================
+  const [user, setUser] = useState<User | null>(null) // Informação do utilizador logado
+  const [notifications, setNotifications] = useState<Notification[]>([]) // A lista de notificações
+  
+  // Loading states separados para permitir carregar o menu logo, mesmo que as notificações demorem
   const [loadingUser, setLoadingUser] = useState(true)
   const [loadingNotifs, setLoadingNotifs] = useState(true)
 
-  // 1. Carrega o Utilizador
+  // =========================================================================
+  // EFFECTS (Carregamento de Dados Iniciais)
+  // =========================================================================
+
+  // 1. Carrega o Utilizador (Para popular o Header e o Avatar)
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -70,24 +88,24 @@ export default function NotificationsPage() {
       } catch (error) {
         console.error("Erro user", error)
       } finally {
-        setLoadingUser(false)
+        setLoadingUser(false) // Desliga o loader global
       }
     }
     loadUser()
   }, [])
 
-  // 2. Carrega as Notificações
+  // 2. Carrega a Lista de Notificações do utilizador
   const fetchNotifications = async () => {
     try {
       const res = await fetch("/api/notifications")
       if (res.ok) {
         const data = await res.json()
-        setNotifications(data)
+        setNotifications(data) // Guarda as notificações no estado local
       }
     } catch (error) {
       console.error("Erro notificações", error)
     } finally {
-      setLoadingNotifs(false)
+      setLoadingNotifs(false) // Desliga o loader específico da lista de notificações
     }
   }
 
@@ -95,11 +113,16 @@ export default function NotificationsPage() {
     fetchNotifications()
   }, [])
 
-  // 3. Marca como Lidas
+  // =========================================================================
+  // HANDLERS (Ações do Utilizador)
+  // =========================================================================
+
+  // 3. Marca TODAS as notificações como Lidas
   const handleMarkAllAsRead = async () => {
     try {
-      const res = await fetch("/api/notifications", { method: "PUT" })
+      const res = await fetch("/api/notifications", { method: "PUT" }) // Rota PUT para atualizar o estado no Backend
       if (res.ok) {
+        // Optimistic UI: Em vez de fazer novo fetch, atualiza instantaneamente a lista no Front-End mudando `is_read` para 1
         setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })))
       }
     } catch (error) {
@@ -107,33 +130,47 @@ export default function NotificationsPage() {
     }
   }
 
-  // Define o Ícone da notificação
+  // =========================================================================
+  // FORMATADORES VISUAIS
+  // =========================================================================
+
+  // Define qual Ícone mostrar dependendo do TIPO de notificação
   const getIcon = (type: string) => {
     switch (type.toUpperCase()) {
-      case "LIKE": return <Heart size={14} className="text-red-500 fill-red-500" />
-      case "COMENTARIO": return <MessageSquare size={14} className="text-blue-500" />
-      case "PEDIDO_AMIZADE": return <UserPlus size={14} className="text-emerald-500" />
-      default: return <Bell size={14} className="text-slate-400" />
+      case "LIKE": return <Heart size={14} className="text-red-500 fill-red-500" /> // Coração vermelho
+      case "COMENTARIO": return <MessageSquare size={14} className="text-blue-500" /> // Balão de fala azul
+      case "PEDIDO_AMIZADE": return <UserPlus size={14} className="text-emerald-500" /> // Bonequinho verde
+      default: return <Bell size={14} className="text-slate-400" /> // Sino padrão para tipos desconhecidos
     }
   }
 
-  // Formata Data
+  // Formata a data para formato Português (Ex: 02 fev, 14:30)
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat('pt-PT', {
       day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
     }).format(new Date(dateString))
   }
 
+  // =========================================================================
+  // RENDERIZAÇÃO ECRÃ DE LOADING
+  // =========================================================================
   if (loadingUser) return <div className={styles.container}><div className="p-10 text-center">Carregando...</div></div>
 
+  // Garante que o User não é nulo para evitar erros ao desenhar a UI
   const safeUser = user || { name: "User", avatar: "", year: "", course: "" }
+  
+  // Conta quantas notificações existem com a flag is_read a falso/0
   const unreadCount = notifications.filter(n => !n.is_read).length
+  
   const userAvatarUrl = getAvatarUrl(safeUser.avatar);
 
+  // =========================================================================
+  // RENDERIZAÇÃO DA PÁGINA (JSX)
+  // =========================================================================
   return (
     <div className={styles.container}>
       
-      {/* --- HEADER --- */}
+      {/* --- HEADER (Menu Superior) --- */}
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link href="/" className={styles.logoLink}>
@@ -157,9 +194,10 @@ export default function NotificationsPage() {
             <Link href="/search"><Search size={20} /></Link>
             <Link href="/friends/requests"><UserPlus size={20} /></Link>
             
-            {/* O ícone do sino fica verde (ativo) nesta página */}
+            {/* O ícone do sino fica verde/ativo porque estamos atualmente nesta página */}
             <Link href="/notification" className={styles.activeIcon}>
                <Bell size={20} />
+               {/* Se houver notificações por ler, mostra a bolinha vermelha no ícone */}
                {unreadCount > 0 && <span className={styles.badge}></span>}
             </Link>
 
@@ -179,15 +217,19 @@ export default function NotificationsPage() {
         </div>
       </header>
 
-      {/* --- MAIN CONTENT --- */}
+      {/* --- CONTEÚDO PRINCIPAL (MAIN) --- */}
       <main className={styles.main}>
-          {/* LISTA DE NOTIFICAÇÕES CENTRADA */}
+          
+          {/* LISTA DE NOTIFICAÇÕES (Centralizada no ecrã) */}
           <section className={styles.notificationsSection}>
+            
             <div className={styles.pageHeader}>
                 <h1>
                     <Bell className="inline-block mr-2" />
                     Notificações
                 </h1>
+                
+                {/* O botão "Marcar como lidas" só aparece se houver realmente algo por ler */}
                 {unreadCount > 0 && (
                   <button onClick={handleMarkAllAsRead} className={styles.markReadBtn}>
                     <CheckCircle2 size={16} /> Marcar como lidas
@@ -195,6 +237,7 @@ export default function NotificationsPage() {
                 )}
             </div>
 
+            {/* Condições de renderização da lista: 1. A carregar / 2. Lista Vazia / 3. Lista Preenchida */}
             {loadingNotifs ? (
                 <div className={styles.loading}>A carregar notificações...</div>
             ) : notifications.length === 0 ? (
@@ -211,9 +254,13 @@ export default function NotificationsPage() {
                         const actorAvatarUrl = getAvatarUrl(notif.actor_avatar);
                         
                         return (
+                          // A classe 'styles.unread' (geralmente usada para deixar o fundo com um azul clarinho) 
+                          // é aplicada apenas se a notificação ainda não foi lida
                           <div key={notif.id} className={`${styles.notificationCard} ${!notif.is_read ? styles.unread : ''}`}>
                               <div className={styles.cardInner}>
                                   <div className={styles.userInfo}>
+                                      
+                                      {/* Área do Avatar e Ícone (Ex: Foto da pessoa com um coração pequeno sobreposto) */}
                                       <div className={styles.avatarWrapper}>
                                         <Avatar className={styles.avatar}>
                                             {actorAvatarUrl && <AvatarImage src={actorAvatarUrl} className="object-cover" />}
@@ -222,11 +269,14 @@ export default function NotificationsPage() {
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className={styles.iconBadge}>
-                                          {getIcon(notif.type)}
+                                          {getIcon(notif.type)} {/* Chama a função que devolve o ícone certo */}
                                         </div>
                                       </div>
+
+                                      {/* Área do Texto da Notificação */}
                                       <div className={styles.details}>
                                           <p className={styles.text}>
+                                            {/* Coloca o nome da pessoa a Negrito, seguido do texto. Ex: "João gostou do teu post" */}
                                             <strong>{notif.actor_name}</strong> {notif.content}
                                           </p>
                                           <p className={styles.date}>
@@ -235,6 +285,7 @@ export default function NotificationsPage() {
                                       </div>
                                   </div>
 
+                                  {/* Pontinho azul lateral que indica visualmente que a notificação não foi lida */}
                                   {!notif.is_read && <div className={styles.unreadDot}></div>}
                               </div>
                           </div>
