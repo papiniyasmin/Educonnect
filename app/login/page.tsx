@@ -2,49 +2,45 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { BookOpen, Mail, Lock, ArrowLeft, AlertCircle } from "lucide-react";
+import Image from "next/image"; // <-- Adicionado import do Image
+import { Mail, Lock, ArrowLeft, AlertCircle } from "lucide-react"; // <-- Removido o BookOpen daqui
 import styles from "./login.module.scss";
 
 export default function LoginPage() {
   // =========================================================================
   // ESTADOS DO COMPONENTE
   // =========================================================================
-  const [email, setEmail] = useState(""); // Guarda o email introduzido
-  const [password, setPassword] = useState(""); // Guarda a palavra-passe introduzida
-  const [isLoading, setIsLoading] = useState(false); // Controla o estado de carregamento do botão (evita cliques duplos)
-  const [error, setError] = useState<string | null>(null); // Guarda e exibe mensagens de erro (ex: credenciais inválidas)
+  const [email, setEmail] = useState(""); 
+  const [password, setPassword] = useState(""); 
+  const [isLoading, setIsLoading] = useState(false); 
+  const [error, setError] = useState<string | null>(null); 
 
   // =========================================================================
   // EFFECTS (Executado ao carregar a página)
   // =========================================================================
-  // Limpar cookies ao carregar a página (Evita conflitos de sessões antigas)
-  // Se o utilizador chegou à página de login, assumimos que deve ter a sessão limpa.
   useEffect(() => {
     document.cookie.split(";").forEach((c) => {
       document.cookie = c
-        .replace(/^ +/, "") // Remove espaços em branco no início
-        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); // Define a data de expiração para o passado, apagando o cookie
+        .replace(/^ +/, "") 
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
     });
-  }, []); // O array vazio [] garante que isto só corre uma vez quando a página abre.
+  }, []); 
 
   // =========================================================================
   // HANDLERS (Ações do utilizador)
   // =========================================================================
-  
-  // Função executada quando o formulário é submetido
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Impede que a página faça refresh (comportamento padrão dos formulários HTML)
-    setIsLoading(true); // Ativa o estado de "A carregar..."
-    setError(null); // Limpa qualquer erro anterior
+    e.preventDefault(); 
+    setIsLoading(true); 
+    setError(null); 
 
     // 1. VALIDAÇÃO LOCAL (Front-end)
-    // Regex (Expressão Regular) simples para verificar se o formato do email é válido (ex: algo@algo.com)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     
     if (!emailRegex.test(email)) {
       setError("Por favor, insira um email válido.");
       setIsLoading(false);
-      return; // Interrompe a execução aqui, não chega a enviar para a API
+      return; 
     }
 
     if (!password) {
@@ -55,35 +51,28 @@ export default function LoginPage() {
 
     // 2. COMUNICAÇÃO COM A API (Back-end)
     try {
-      // Faz um pedido POST à rota de login
       const res = await fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }), // Envia os dados no corpo do pedido
+        body: JSON.stringify({ email, password }), 
       });
 
       const data = await res.json();
 
       // 3. SUCESSO OU ERRO
       if (data.success) {
-        // Se a API responder com sucesso (geralmente enviou um cookie de sessão na resposta),
-        // Redireciona o utilizador para o Dashboard.
-        // O uso de window.location.href (em vez do router.push do Next.js) força um recarregamento total da página, 
-        // o que é útil para garantir que todos os layouts e middlewares reconhecem o novo cookie de sessão.
         window.location.href = "/dashboard";
       } else {
-        // Se a API recusar o login (pass errada, conta inexistente), mostra o erro
         setError(data.error || "Email ou senha incorretos.");
       }
     } catch (err) {
-      // Se houver um erro de rede (ex: servidor em baixo, falha de internet)
       console.error("Erro:", err);
       setError("Erro ao ligar ao servidor. Tente novamente.");
     }
 
-    setIsLoading(false); // Desativa o estado de carregamento independentemente do resultado
+    setIsLoading(false); 
   };
 
   // =========================================================================
@@ -99,12 +88,20 @@ export default function LoginPage() {
             <ArrowLeft />
             Voltar ao início
           </Link>
+          
+          {/* --- LOGO ATUALIZADO AQUI --- */}
           <div className={styles.logoContainer}>
-            <div className={styles.logoIcon}>
-              <BookOpen />
-            </div>
-            <h1 className={styles.logoText}>EduConnect</h1>
+            <Image 
+              src="/logo.png" 
+              alt="Logo EduConnect" 
+              width={160} 
+              height={40} 
+              priority 
+              className={styles.logoImage} 
+            />
           </div>
+          {/* ----------------------------- */}
+
           <p className={styles.subtitle}>Entre na sua conta</p>
         </div>
 
@@ -119,7 +116,7 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className={styles.loginForm}>
             
-            {/* Exibição de Erros: Só renderiza esta div se a variável 'error' não for nula */}
+            {/* Exibição de Erros */}
             {error && (
               <div style={{ 
                 backgroundColor: "#fee2e2", 
@@ -151,7 +148,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
-                    setError(null); // UX: Limpa o alerta de erro assim que o utilizador começa a corrigir o campo
+                    setError(null); 
                   }}
                   className={styles.formInput}
                   required
@@ -173,7 +170,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    setError(null); // UX: Limpa o alerta de erro ao digitar
+                    setError(null); 
                   }}
                   className={styles.formInput}
                   required
@@ -185,7 +182,7 @@ export default function LoginPage() {
             <button
               type="submit"
               className={styles.submitButton}
-              disabled={isLoading} // Bloqueia o botão enquanto estiver a fazer o pedido à API
+              disabled={isLoading} 
             >
               {isLoading ? "Entrando..." : "Entrar"}
             </button>

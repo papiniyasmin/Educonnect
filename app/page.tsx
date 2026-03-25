@@ -1,22 +1,30 @@
+import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Users, MessageCircle, BookOpen, Star, ArrowRight, ShieldCheck } from "lucide-react"
+import { Users, MessageCircle, BookOpen, ArrowRight } from "lucide-react"
 import styles from "./page.module.scss"
 
 export default function HomePage() {
   return (
     <div className={styles.homepage}>
-      {/* Header */}
+      {/* Header Atualizado com a Imagem */}
       <header className={styles.header}>
         <div className={styles.container}> 
-          <div className={styles.headerContent}>
-            <Link href="/" className={styles.logo}>
-              <div className={styles.logoIcon}>
-                <BookOpen size={24} />
-              </div>
-              <span className={styles.logoText}>EduConnect</span>
+          <div className={styles.headerContent}> {/* Podes mudar para styles.headerInner se preferires, consoante o teu SCSS */}
+            
+            {/* Novo Logo */}
+            <Link href="/" className={styles.logoLink}>
+              <Image 
+                src="/logo.png" 
+                alt="Logo EduConnect" 
+                width={160} 
+                height={40} 
+                priority 
+                className={styles.logoImage} 
+              />
             </Link>
             
+            {/* Botões mantidos */}
             <div className={styles.headerActions}>
               <Link href="/login">
                 <Button variant="ghost" className={styles.btnGhost}>
@@ -29,6 +37,7 @@ export default function HomePage() {
                 </Button>
               </Link>
             </div>
+
           </div>
         </div>
       </header>
