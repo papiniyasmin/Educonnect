@@ -215,7 +215,8 @@ export default function DashboardPage() {
     if (res.ok) {
       const comment = await res.json()
       setPosts(prev => prev.map(p => 
-        p.id === postId ? { ...p, comments: [...p.comments, comment] } : p
+        // A correção está aqui em baixo! Adicionado o || []
+        p.id === postId ? { ...p, comments: [...(p.comments || []), comment] } : p
       ))
     }
   }

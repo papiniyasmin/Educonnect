@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image"; // <-- Adicionado import do Image
+import Image from "next/image"; 
 import { Mail, Lock, ArrowLeft, AlertCircle } from "lucide-react"; // <-- Removido o BookOpen daqui
 import styles from "./login.module.scss";
 

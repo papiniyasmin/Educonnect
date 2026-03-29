@@ -91,6 +91,25 @@ export default function PostCard({ post, currentUser, onLike, onComment }: PostC
             </Button>
           </div>
 
+          {/* === LISTA DE COMENTÁRIOS === */}
+          {post.comments && post.comments.length > 0 && (
+            <div className="w-full flex flex-col gap-3 mt-2 border-t border-slate-100 dark:border-slate-700 pt-4">
+              {post.comments.map((comment: any, index: number) => (
+                <div key={index} className="flex gap-2 items-start">
+                  <Avatar className="w-6 h-6">
+                    <AvatarImage src={comment.authorAvatar} />
+                    <AvatarFallback className="text-[10px]">{comment.author?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col bg-slate-50 dark:bg-slate-900/50 px-3 py-2 rounded-2xl rounded-tl-none text-sm w-full">
+                    <span className="font-semibold text-xs text-slate-900 dark:text-slate-100">{comment.author}</span>
+                    <span className="text-slate-700 dark:text-slate-300 mt-0.5">{comment.content}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* ============================== */}
+
           <form onSubmit={handleSubmitComment} className="flex gap-2 w-full mt-2">
             <Input 
               placeholder="Escreva um comentário..." 
