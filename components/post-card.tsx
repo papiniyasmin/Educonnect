@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Heart, MessageCircle, Send, Share2, X } from "lucide-react" 
+import { Heart, MessageCircle, Send, X } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { pt } from "date-fns/locale"
 
@@ -36,7 +36,8 @@ export default function PostCard({ post, currentUser, onLike, onComment }: PostC
 
   return (
     <>
-      <Card className="max-w-2xl mx-auto w-full mb-2 overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+      <Card className="p-0 gap-0 h-fit max-w-2xl mx-auto w-full mb-2 overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+        
         <CardHeader className="flex flex-row items-center gap-3 p-3 pb-1">
           <Avatar className="w-10 h-10">
             <AvatarImage src={post.authorAvatar} />
@@ -90,10 +91,6 @@ export default function PostCard({ post, currentUser, onLike, onComment }: PostC
               <MessageCircle className="w-4 h-4" />
               <span className="text-xs">{post.comments?.length || 0}</span>
             </Button>
-
-            <Button variant="ghost" size="sm" className="ml-auto h-8 px-2 text-slate-500 hover:text-blue-600">
-               <Share2 className="w-4 h-4" />
-            </Button>
           </div>
 
           {showComments && (
@@ -133,7 +130,8 @@ export default function PostCard({ post, currentUser, onLike, onComment }: PostC
                     e.target.style.height = `${e.target.scrollHeight}px`
                   }}
                   onKeyDown={handleKeyDown}
-                  className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded-md px-2 py-1.5 text-xs resize-none min-h-[28px] max-h-[100px] overflow-y-auto"
+                  
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded-md px-2 py-1.5 text-xs resize-none min-h-[28px] max-h-[100px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                 />
                 <Button type="submit" size="icon" disabled={!commentText.trim()} className="text-emerald-600 hover:bg-emerald-50 bg-transparent shadow-none h-7 w-7 mb-0">
                   <Send className="w-3.5 h-3.5" />

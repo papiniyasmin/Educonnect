@@ -70,7 +70,7 @@ export default function GroupPage() {
   const [loading, setLoading] = useState(true);
 
   // Estados para Criar Novo Post
-  const [isCreateOpen, setIsCreateOpen] = useState(false); // <--- Lógica adicionada
+  const [isCreateOpen, setIsCreateOpen] = useState(false); 
   const [newPostContent, setNewPostContent] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -97,11 +97,10 @@ export default function GroupPage() {
   async function fetchData() {
     try {
       if (!groupId) return;
-      // Adicionei a chamada para obter o utilizador atual (ajusta o endpoint de acordo com o teu backend)
       const [resDetails, resPosts, resUser] = await Promise.all([
         fetch(`/api/groups/${groupId}/details`, { cache: 'no-store' }), 
         fetch(`/api/groups/${groupId}/posts`, { cache: 'no-store' }),
-        fetch('/api/user/settings', { cache: 'no-store' }) // Usando o mesmo endpoint do teu Dashboard
+        fetch('/api/user/settings', { cache: 'no-store' })
       ]);
       
       if (resDetails.ok) {
@@ -317,9 +316,10 @@ export default function GroupPage() {
                 </div>
                 
                 <div className="flex flex-col">
+                  {/* TEXTAREA ESCONDIDA SCROLL AQUI */}
                   <textarea
                     placeholder="Escreve aqui..."
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-emerald-500 resize-none outline-none dark:text-white min-h-[50px] max-h-[150px] transition-all"
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-emerald-500 resize-none outline-none dark:text-white min-h-[50px] max-h-[150px] overflow-y-auto transition-all [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                     value={newPostContent}
                     onChange={(e) => {
                       setNewPostContent(e.target.value);
@@ -373,7 +373,8 @@ export default function GroupPage() {
               </div>
           ) : (
               posts.map((post) => (
-                  <Card key={post.id} className="w-full overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                 
+                  <Card key={post.id} className="p-0 gap-0 h-fit w-full overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                       
                       {/* --- CABEÇALHO DO POST --- */}
                       <CardHeader className="flex flex-row items-center justify-between p-3 pb-1">
@@ -423,10 +424,11 @@ export default function GroupPage() {
                       <CardContent className="px-3 py-1 mt-1">
                           {editingPostId === post.id ? (
                             <div className="mt-2 space-y-2 border border-blue-200 dark:border-blue-900/50 p-3 rounded-lg bg-blue-50/50 dark:bg-slate-900/50">
+                              {/* TEXTAREA ESCONDIDA SCROLL AQUI */}
                               <textarea 
                                 value={editContent}
                                 onChange={(e) => { setEditContent(e.target.value); e.target.style.height = "auto"; e.target.style.height = `${e.target.scrollHeight}px`; }}
-                                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md p-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none min-h-[60px]"
+                                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-md p-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none min-h-[60px] max-h-[200px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                               />
                               {editImagePreview && (
                                 <div className="relative mb-2 inline-block">
@@ -514,6 +516,7 @@ export default function GroupPage() {
                                     {getInitials(currentUser?.name)}
                                   </AvatarFallback>
                                 </Avatar>
+                                {/* TEXTAREA ESCONDIDA SCROLL AQUI */}
                                 <textarea 
                                   placeholder="Escreve uma resposta..." 
                                   value={commentTexts[post.id] || ""}
@@ -524,7 +527,7 @@ export default function GroupPage() {
                                     e.target.style.height = `${e.target.scrollHeight}px`;
                                   }}
                                   onKeyDown={(e) => handleCommentKeyDown(e, post.id)}
-                                  className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded-2xl sm:pl-9 px-3 py-1.5 text-xs resize-none min-h-[30px] max-h-[100px] overflow-y-auto"
+                                  className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 rounded-2xl sm:pl-9 px-3 py-1.5 text-xs resize-none min-h-[30px] max-h-[100px] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                                 />
                                 <Button type="submit" size="icon" disabled={!commentTexts[post.id]?.trim() || isSendingComment === post.id} className="text-emerald-600 hover:bg-emerald-50 bg-transparent shadow-none h-8 w-8 mb-0 rounded-full flex-shrink-0">
                                   {isSendingComment === post.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
