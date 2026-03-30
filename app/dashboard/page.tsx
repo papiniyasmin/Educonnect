@@ -6,14 +6,14 @@ import Image from "next/image"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { 
   BookOpen, LogOut, Search, Settings, Bell, 
-  UserPlus, Users, MoreHorizontal, Trash2, Edit2 
+  UserPlus, Users, MoreHorizontal, Trash2, Edit2
 } from "lucide-react" 
 import CreatePostModal from "@/components/create-post-modal"
 import PostCard from "@/components/post-card"
 import styles from "./dashboard.module.scss"
 
 // =========================================================================
-// INTERFACES (Tipagens para o TypeScript)
+// INTERFACES 
 // =========================================================================
 
 interface User {
@@ -40,24 +40,24 @@ interface Post {
 
 export default function DashboardPage() {
   // =========================================================================
-  // ESTADOS (Variáveis de controlo da interface)
+  // ESTADOS
   // =========================================================================
   const [user, setUser] = useState<User | null>(null) 
   const [posts, setPosts] = useState<Post[]>([]) 
   const [loading, setLoading] = useState(true) 
   
-  // Controlo do menu de opções (os 3 pontinhos nos posts)
+  // Controlo visual
   const [activeMenu, setActiveMenu] = useState<number | null>(null) 
   const menuRef = useRef<HTMLDivElement | null>(null) 
-  // Controlo da edição de posts
   const [editingPostId, setEditingPostId] = useState<number | null>(null) 
   const [editContent, setEditContent] = useState<string>("") 
+  
+  // Controla se a área de criar post está aberta ou fechada
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   // =========================================================================
   // FUNÇÕES AUXILIARES
   // =========================================================================
-
-  // Extrai as iniciais do nome para mostrar quando o utilizador não tem foto (Ex: "Ana Silva" -> "AS")
   const getInitials = (name: string | undefined) => {
     if (!name) return "U"; 
     const names = name.trim().split(" ");
@@ -68,10 +68,8 @@ export default function DashboardPage() {
   };
 
   // =========================================================================
-  // EFFECTS (Ciclo de vida do componente)
+  // EFFECTS
   // =========================================================================
-
-  // 1. Efeito para fechar o menu dos 3 pontinhos se o utilizador clicar fora dele
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -79,10 +77,9 @@ export default function DashboardPage() {
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside) // Limpeza do listener
+    return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  // 2. Função assíncrona para carregar os dados iniciais (Utilizador + Posts)
   const loadData = async () => {
     try {
       const [userRes, postsRes] = await Promise.all([
@@ -92,8 +89,6 @@ export default function DashboardPage() {
 
       if (userRes.ok) {
         const data = await userRes.json()
-        
-        // Verifica se a foto de perfil existe e constrói o caminho (URL) correto
         const fetchedFotoUrl = data.foto_url || data.avatar;
         const finalAvatarUrl = fetchedFotoUrl 
           ? (fetchedFotoUrl.startsWith("http") || fetchedFotoUrl.startsWith("data:")) 
@@ -122,44 +117,35 @@ export default function DashboardPage() {
     }
   }
 
-  // 3. Efeito que corre uma única vez quando a página carrega, chamando a função loadData
   useEffect(() => {
     loadData()
   }, [])
 
   // =========================================================================
-  // HANDLERS (Ações feitas pelo utilizador)
+  // HANDLERS
   // =========================================================================
-
-  // APAGAR POST
   const handleDeletePost = async (postId: number) => {
     if (!confirm("Desejas eliminar esta publicação?")) return 
     setPosts(prev => prev.filter(p => p.id !== postId))
-    setActiveMenu(null) // Fecha o menu
-    
+    setActiveMenu(null)
     try {
-      // Envia a ordem de apagar para o servidor em background
       await fetch(`/api/posts/${postId}`, { method: "DELETE" })
     } catch (error) {
       alert("Erro ao eliminar post.")
     }
   }
 
-  // COMEÇAR A EDITAR POST
   const handleStartEdit = (post: Post) => {
     setEditingPostId(post.id) 
     setEditContent(post.content) 
     setActiveMenu(null)
   }
 
-  // GUARDAR A EDIÇÃO DO POST
   const handleSaveEdit = async (postId: number) => {
     if (!editContent.trim()) return 
     setPosts(prev => prev.map(p => p.id === postId ? { ...p, content: editContent } : p))
     setEditingPostId(null)
-    
     try {
-      // Guarda a alteração na Base de Dados
       await fetch(`/api/posts/${postId}`, {
         method: "PUT", 
         headers: { "Content-Type": "application/json" },
@@ -170,11 +156,8 @@ export default function DashboardPage() {
     }
   }
 
-  // CRIAR NOVO POST
   const handleCreatePost = async (postContent: string, file: File | null, topicId: number) => {
     if (!user) return
-    
-    // Usa FormData em vez de JSON porque suporta envio de ficheiros (Imagens)
     const formData = new FormData()
     formData.append("content", postContent)
     formData.append("topicId", topicId.toString())
@@ -183,20 +166,19 @@ export default function DashboardPage() {
     try {
       await fetch("/api/posts", { method: "POST", body: formData })
       loadData() 
+      // Fecha a área de criar post depois de publicar com sucesso!
+      setIsCreateOpen(false) 
     } catch (error) {
       console.error(error)
     }
   }
 
-  // GOSTAR (LIKE)
   const handleLike = async (postId: number) => {
     setPosts(prev => prev.map(p => 
       p.id === postId 
         ? { ...p, isLiked: !p.isLiked, likes: p.isLiked ? p.likes - 1 : p.likes + 1 } 
         : p
     ))
-    
-    // Envia para o Backend em background
     fetch("/api/posts/like", { 
       method: "POST", 
       headers: { "Content-Type": "application/json" }, 
@@ -204,18 +186,15 @@ export default function DashboardPage() {
     })
   }
 
-  // COMENTAR
   const handleComment = async (postId: number, content: string) => {
     const res = await fetch("/api/posts/comment", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ postId, content })
     })
-    
     if (res.ok) {
       const comment = await res.json()
       setPosts(prev => prev.map(p => 
-        // A correção está aqui em baixo! Adicionado o || []
         p.id === postId ? { ...p, comments: [...(p.comments || []), comment] } : p
       ))
     }
@@ -224,34 +203,28 @@ export default function DashboardPage() {
   // =========================================================================
   // RENDERIZAÇÃO
   // =========================================================================
-
-  // Ecrãs de transição (Loading e Erro de Autenticação)
   if (loading) return <div className={styles.loadingState}>Carregando EduConnect...</div>
   if (!user) return <div className={styles.errorState}><Link href="/login">Ir para Login</Link></div>
   const safeUserUI = { ...user, name: user.name || "Utilizador", avatar: user.avatar || "" }
 
   return (
     <div className={styles.container}>
-      
       {/* HEADER */}
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <Link href="/" className={styles.logoLink}>
             <Image src="/logo.png" alt="Logo" width={160} height={40} priority className={styles.logoImage} />
           </Link>
-
           <nav className={styles.desktopNav}>
             <Link href="/dashboard" className={styles.activeLink}>Feed</Link>
             <Link href="/groups">Grupos</Link>
             <Link href="/chat">Chat</Link>
           </nav>
-
           <div className={styles.actions}>
             <Link href="/search"><Search className={styles.icon} /></Link>
             <Link href="/friends/requests"><UserPlus className={styles.icon} /></Link>
             <Link href="/notification"><Bell className={styles.icon} /></Link>
             <Link href="/settings"><Settings className={styles.icon} /></Link>
-            
             <Link href="/profile">
               <Avatar className={`${styles.avatar} border border-slate-700`}>
                 {user.avatar && <AvatarImage src={user.avatar} className="object-cover" />}
@@ -260,7 +233,6 @@ export default function DashboardPage() {
                 </AvatarFallback>
               </Avatar>
             </Link>
-            
             <Link href="/login"><LogOut className={styles.logoutIcon} /></Link>
           </div>
         </div>
@@ -270,16 +242,52 @@ export default function DashboardPage() {
       <main className={styles.main}>
         <section className={styles.feed}>
           <div className="max-w-2xl mx-auto w-full px-4">
-            <CreatePostModal user={safeUserUI} onCreatePost={handleCreatePost} />
             
+            {/* === ÁREA DE CRIAÇÃO COMPACTA / EXPANDIDA === */}
+            {!isCreateOpen ? (
+              // ESTADO 1: FECHADO (mb-4 para separar um pouquinho do primeiro post)
+              <div 
+                onClick={() => setIsCreateOpen(true)}
+                className="bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 mb-4 flex items-center gap-3 cursor-text hover:border-slate-300 dark:hover:border-slate-600 transition-all"
+              >
+                <Avatar className="w-10 h-10 border border-slate-100 dark:border-slate-700">
+                  {user.avatar && <AvatarImage src={user.avatar} className="object-cover" />}
+                  <AvatarFallback className="bg-emerald-600 text-white text-xs font-medium">
+                    {getInitials(user.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 bg-slate-100 dark:bg-slate-900/50 rounded-full px-4 py-2.5 text-sm text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 select-none">
+                  Partilha algo com a turma, {user.name.split(' ')[0]}...
+                </div>
+              </div>
+            ) : (
+              // ESTADO 2: ABERTO
+              <div className="mb-4 animate-in fade-in zoom-in-95 duration-200">
+                <div className="flex justify-end mb-2 px-1">
+                  <button 
+                    onClick={() => setIsCreateOpen(false)}
+                    className="text-xs font-semibold text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors uppercase tracking-wider"
+                  >
+                    Cancelar publicação
+                  </button>
+                </div>
+                <CreatePostModal 
+                  user={safeUserUI} 
+                  onCreatePost={handleCreatePost} 
+                />
+              </div>
+            )}
+            {/* ======================================= */}
+
             <div className={styles.postsList}>
               {posts.map(post => (
-                <div key={post.id} className="relative mb-6">
-                  
+                // Margem SUPER REDUZIDA aqui: mb-2 (8px de espaço)
+                <div key={post.id} className="relative mb-2">
                   {editingPostId === post.id ? (
                     <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
                       <textarea 
-                        value={editContent}// O código no "ref" e "onChange" serve para a textarea crescer automaticamente à medida que escreves (Auto-resize)
+                        value={editContent}
+                        rows={1}
                         ref={(el) => {
                           if (el) {
                             el.style.height = "auto"
@@ -291,9 +299,8 @@ export default function DashboardPage() {
                           e.target.style.height = "auto"
                           e.target.style.height = `${e.target.scrollHeight}px`
                         }}
-                        className="w-full px-3 py-1.5 text-sm leading-tight bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none min-h-[32px]"
-                        style={{ overflow: "hidden" }}
-                        autoFocus // Foca na caixa de texto logo que clicas em "Editar"
+                        className="w-full px-3 py-1.5 text-sm leading-tight bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none min-h-[32px] max-h-[150px] overflow-y-auto"
+                        autoFocus
                       />
                       <div className="flex justify-end gap-2 mt-2">
                         <button onClick={() => setEditingPostId(null)} className="px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700 rounded-md transition-colors">
@@ -306,21 +313,17 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <>
-                      {/* Lógica do Menu (Os 3 pontinhos) - Só aparece se fores tu o autor do post */}
                       {user.name === post.author && (
                         <div className="absolute top-4 right-4 z-10" ref={activeMenu === post.id ? menuRef : null}>
                           <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}>
                             <MoreHorizontal size={20} />
                           </button>
-                          
-                          {/* O Dropdown Menu (Editar / Apagar) que aparece quando clicas nos 3 pontinhos */}
                           {activeMenu === post.id && (
                             <div className="absolute right-0 mt-1 w-36 bg-white dark:bg-slate-800 rounded-md shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                               <button onClick={() => handleStartEdit(post)} className="flex items-center w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 gap-2">
                                 <Edit2 size={16} />
                                 <span>Editar</span>
                               </button>
-                              
                               <button onClick={() => handleDeletePost(post.id)} className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 gap-2">
                                 <Trash2 size={16} />
                                 <span>Apagar</span>
@@ -329,8 +332,6 @@ export default function DashboardPage() {
                           )}
                         </div>
                       )}
-                      
-                      {/* O componente isolado que mostra de facto o perfil de quem postou, texto, foto, likes e comentários */}
                       <PostCard 
                         post={post} 
                         currentUser={safeUserUI} 
@@ -339,7 +340,6 @@ export default function DashboardPage() {
                       />
                     </>
                   )}
-                  
                 </div>
               ))}
             </div>
@@ -348,7 +348,7 @@ export default function DashboardPage() {
         </section>
       </main>
 
-      {/* MENU INFERIOR (Mobile/Telemóveis apenas) */}
+      {/* MENU INFERIOR */}
       <footer className={styles.mobileNav}>
         <div className={styles.navContent}>
           <Link href="/dashboard" className={styles.activeLink}>

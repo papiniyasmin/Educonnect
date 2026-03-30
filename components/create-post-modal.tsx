@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Image as ImageIcon, Send, X, Loader2 } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface CreatePostModalProps {
   user: any
-  // Atualizado para receber o ID do tópico (number)
   onCreatePost: (content: string, file: File | null, topicId: number) => Promise<void>
 }
 
@@ -17,7 +15,6 @@ export default function CreatePostModal({ user, onCreatePost }: CreatePostModalP
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
-  // TÓPICOS DA TUA BD
   const [topics, setTopics] = useState<{id: number, nome: string}[]>([])
   const [selectedTopicId, setSelectedTopicId] = useState<number>(0)
 
@@ -52,9 +49,7 @@ export default function CreatePostModal({ user, onCreatePost }: CreatePostModalP
     setIsSubmitting(true)
     
     try {
-      // Passa o ID do tópico selecionado para a função
       await onCreatePost(content, file, selectedTopicId)
-      
       setContent("")
       removeImage()
       if (topics.length > 0) setSelectedTopicId(topics[0].id)
@@ -64,45 +59,43 @@ export default function CreatePostModal({ user, onCreatePost }: CreatePostModalP
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 mb-6">
-      <div className="flex gap-3">
-        <Avatar>
-          <AvatarImage src={user.avatar} />
-          <AvatarFallback>{user.name[0]}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <textarea
-            placeholder={`O que estás a pensar, ${user.name.split(' ')[0]}?`}
-            className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-lg p-3 text-sm focus:ring-0 resize-none outline-none dark:text-white min-h-[60px]"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            disabled={isSubmitting}
-          />
-          
-          {previewUrl && (
-            <div className="relative mt-2 inline-block">
-              <img src={previewUrl} alt="Preview" className="h-32 rounded-md object-cover border" />
-              <button onClick={removeImage} className="absolute -top-2 -right-2 bg-slate-800 text-white rounded-full p-1 hover:bg-slate-900">
-                <X size={14} />
-              </button>
-            </div>
-          )}
-        </div>
+    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-3 w-full">
+      <div className="flex flex-col">
+        <textarea
+          placeholder={`O que estás a pensar, ${user.name.split(' ')[0]}?`}
+          className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-700 rounded-lg p-2.5 text-sm focus:ring-1 focus:ring-emerald-500 resize-none outline-none dark:text-white min-h-[50px] max-h-[150px]"
+          value={content}
+          onChange={(e) => {
+            setContent(e.target.value)
+            e.target.style.height = "auto"
+            e.target.style.height = `${e.target.scrollHeight}px`
+          }}
+          disabled={isSubmitting}
+          autoFocus
+        />
+        
+        {previewUrl && (
+          <div className="relative mt-2 inline-block self-start">
+            <img src={previewUrl} alt="Preview" className="h-24 rounded-md object-cover border border-slate-200 dark:border-slate-700" />
+            <button onClick={removeImage} className="absolute -top-2 -right-2 bg-slate-800 text-white rounded-full p-1 hover:bg-slate-900 shadow-md">
+              <X size={12} />
+            </button>
+          </div>
+        )}
       </div>
       
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-        <div className="flex items-center gap-3">
-          <label className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-700 rounded-full cursor-pointer transition-colors">
-            <ImageIcon size={20} />
+      <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+        <div className="flex items-center gap-2">
+          <label className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-700 rounded-md cursor-pointer transition-colors">
+            <ImageIcon size={18} />
             <input type="file" className="hidden" accept="image/*" onChange={handleImageSelect} ref={fileInputRef} disabled={isSubmitting}/>
           </label>
           
-          {/* SELECT DO TÓPICO (LIGADO À BD) */}
           <select 
             value={selectedTopicId}
             onChange={(e) => setSelectedTopicId(Number(e.target.value))}
             disabled={isSubmitting}
-            className="text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-none rounded-md px-3 py-1.5 outline-none cursor-pointer focus:ring-2 focus:ring-emerald-500"
+            className="text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-none rounded-md px-2 py-1 outline-none cursor-pointer focus:ring-1 focus:ring-emerald-500 h-8"
           >
             {topics.length === 0 && <option value={0}>A carregar...</option>}
             {topics.map(t => (
@@ -114,9 +107,9 @@ export default function CreatePostModal({ user, onCreatePost }: CreatePostModalP
         <button 
           onClick={handleSubmit}
           disabled={(!content.trim() && !file) || isSubmitting}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 disabled:opacity-50"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 h-8"
         >
-          {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+          {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
           <span>Publicar</span>
         </button>
       </div>

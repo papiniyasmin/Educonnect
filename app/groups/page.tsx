@@ -57,38 +57,54 @@ const getGroupIcon = (subject: string, name: string, avatarUrl?: string) => {
 
   const iconProps = { className: "w-6 h-6 text-white" }; 
 
+  // Função auxiliar para procurar palavras parciais (ex: "matem" apanha "matemática")
+  const hasWord = (words: string[]) => {
+    return words.some(word => textToAnalyze.includes(word));
+  };
+
+  // Função auxiliar para palavras EXATAS (evita que "matemática" ative "tic")
+  const hasExactWord = (words: string[]) => {
+    return words.some(word => new RegExp(`\\b${word}\\b`).test(textToAnalyze));
+  };
+
   // --- TECNOLOGIA E INFORMÁTICA ---
-  if (textToAnalyze.includes("inteligencia artificial") || textToAnalyze.includes(" ia ") || textToAnalyze.includes("machine learning") || textToAnalyze.includes("robot")) return <Bot {...iconProps} />;
-  if (textToAnalyze.includes("dados") || textToAnalyze.includes("data science") || textToAnalyze.includes("sql") || textToAnalyze.includes("database")) return <Database {...iconProps} />;
-  if (textToAnalyze.includes("seguranca") || textToAnalyze.includes("cyber") || textToAnalyze.includes("hacker")) return <ShieldCheck {...iconProps} />;
-  if (textToAnalyze.includes("jogo") || textToAnalyze.includes("game") || textToAnalyze.includes("unity") || textToAnalyze.includes("unreal")) return <Gamepad2 {...iconProps} />;
-  if (textToAnalyze.includes("mobile") || textToAnalyze.includes("android") || textToAnalyze.includes("ios") || textToAnalyze.includes("app")) return <Smartphone {...iconProps} />;
-  if (textToAnalyze.includes("hardware") || textToAnalyze.includes("eletronic") || textToAnalyze.includes("arduino") || textToAnalyze.includes("raspberry")) return <Cpu {...iconProps} />;
-  if (textToAnalyze.includes("rede") || textToAnalyze.includes("servidor") || textToAnalyze.includes("devops") || textToAnalyze.includes("infraestrutura")) return <Server {...iconProps} />;
-  if (textToAnalyze.includes("cloud") || textToAnalyze.includes("nuvem") || textToAnalyze.includes("aws") || textToAnalyze.includes("azure")) return <Cloud {...iconProps} />;
-  if (textToAnalyze.includes("web") || textToAnalyze.includes("frontend") || textToAnalyze.includes("interface")) return <MonitorSmartphone {...iconProps} />;
-  if (textToAnalyze.includes("program") || textToAnalyze.includes("tic") || textToAnalyze.includes("informat") || textToAnalyze.includes("computa") || textToAnalyze.includes("software")) return <Code {...iconProps} />;
-  if (textToAnalyze.includes("matem") || textToAnalyze.includes("calc")) return <Calculator {...iconProps} />;
-  if (textToAnalyze.includes("fisic")) return <Atom {...iconProps} />;
-  if (textToAnalyze.includes("biolog") || textToAnalyze.includes("naturais")) return <Dna {...iconProps} />;
-  if (textToAnalyze.includes("quimic") || textToAnalyze.includes("laborator")) return <FlaskConical {...iconProps} />;
-  if (textToAnalyze.includes("histori")) return <Landmark {...iconProps} />;
-  if (textToAnalyze.includes("geografi") || textToAnalyze.includes("mundo")) return <Globe {...iconProps} />;
-  if (textToAnalyze.includes("portugu") || textToAnalyze.includes("literatura") || textToAnalyze.includes("escrita")) return <BookType {...iconProps} />;
-  if (textToAnalyze.includes("ingl") || textToAnalyze.includes("frances") || textToAnalyze.includes("lingua") || textToAnalyze.includes("idioma")) return <Languages {...iconProps} />;
-  if (textToAnalyze.includes("art") || textToAnalyze.includes("desenh") || textToAnalyze.includes("pintura")) return <Palette {...iconProps} />;
-  if (textToAnalyze.includes("music") || textToAnalyze.includes("banda")) return <Music {...iconProps} />;
-  if (textToAnalyze.includes("filosof") || textToAnalyze.includes("psicol")) return <BrainCircuit {...iconProps} />;
-  if (textToAnalyze.includes("desporto") || textToAnalyze.includes("futebol") || textToAnalyze.includes("ginasi") || textToAnalyze.includes("fisica")) return <Dumbbell {...iconProps} />;
-  if (textToAnalyze.includes("economia") || textToAnalyze.includes("gestao") || textToAnalyze.includes("financa") || textToAnalyze.includes("contabilidade")) return <Briefcase {...iconProps} />;
-  if (textToAnalyze.includes("direito") || textToAnalyze.includes("lei") || textToAnalyze.includes("justica")) return <Scale {...iconProps} />;
-  if (textToAnalyze.includes("arquitetura") || textToAnalyze.includes("urbanismo")) return <Compass {...iconProps} />;
-  if (textToAnalyze.includes("engenharia") || textToAnalyze.includes("mecani") || textToAnalyze.includes("eletrotec")) return <Cog {...iconProps} />;
-  if (textToAnalyze.includes("medicina") || textToAnalyze.includes("enfermagem") || textToAnalyze.includes("saude")) return <HeartPulse {...iconProps} />;
-  if (textToAnalyze.includes("astronomia") || textToAnalyze.includes("espaco")) return <Telescope {...iconProps} />;
-  if (textToAnalyze.includes("multimedia") || textToAnalyze.includes("video") || textToAnalyze.includes("audiovisual") || textToAnalyze.includes("cinema")) return <MonitorPlay {...iconProps} />;
-  if (textToAnalyze.includes("ecologia") || textToAnalyze.includes("ambiente") || textToAnalyze.includes("sustentabilidade")) return <Leaf {...iconProps} />;
-  if (textToAnalyze.includes("sociologia") || textToAnalyze.includes("cidadania") || textToAnalyze.includes("social")) return <Network {...iconProps} />;
+  if (hasWord(["inteligencia artificial", "machine learning", "robot"]) || hasExactWord(["ia"])) return <Bot {...iconProps} />;
+  if (hasWord(["dados", "data science", "sql", "database"])) return <Database {...iconProps} />;
+  if (hasWord(["seguranca", "cyber", "hacker"])) return <ShieldCheck {...iconProps} />;
+  if (hasWord(["jogo", "game", "unity", "unreal"])) return <Gamepad2 {...iconProps} />;
+  if (hasWord(["mobile", "android", "ios", "app"])) return <Smartphone {...iconProps} />;
+  if (hasWord(["hardware", "eletronic", "arduino", "raspberry"])) return <Cpu {...iconProps} />;
+  if (hasWord(["rede", "servidor", "devops", "infraestrutura"])) return <Server {...iconProps} />;
+  if (hasWord(["cloud", "nuvem", "aws", "azure"])) return <Cloud {...iconProps} />;
+  if (hasWord(["web", "frontend", "interface"])) return <MonitorSmartphone {...iconProps} />;
+  if (hasWord(["program", "informat", "computa", "software"]) || hasExactWord(["tic"])) return <Code {...iconProps} />;
+
+  // --- CIÊNCIAS EXATAS E NATURAIS ---
+  if (hasWord(["matem", "calc", "geometri"])) return <Calculator {...iconProps} />;
+  if (hasWord(["fisic"])) return <Atom {...iconProps} />;
+  if (hasWord(["biolog", "naturais"])) return <Dna {...iconProps} />;
+  if (hasWord(["quimic", "laborator"])) return <FlaskConical {...iconProps} />;
+
+  // --- CIÊNCIAS HUMANAS E ARTES ---
+  if (hasWord(["histori"])) return <Landmark {...iconProps} />;
+  if (hasWord(["geografi", "mundo"])) return <Globe {...iconProps} />;
+  if (hasWord(["portugu", "literatura", "escrita", "leitura"])) return <BookType {...iconProps} />;
+  if (hasWord(["ingl", "frances", "lingua", "idioma"])) return <Languages {...iconProps} />;
+  if (hasWord(["art", "desenh", "pintura"])) return <Palette {...iconProps} />;
+  if (hasWord(["music", "banda"])) return <Music {...iconProps} />;
+  if (hasWord(["filosof", "psicol"])) return <BrainCircuit {...iconProps} />;
+
+  // --- OUTROS ---
+  if (hasWord(["desporto", "futebol", "futsal", "ginasi", "fisica"])) return <Dumbbell {...iconProps} />;
+  if (hasWord(["economia", "gestao", "financa", "contabilidade"])) return <Briefcase {...iconProps} />;
+  if (hasWord(["direito", "justica"]) || hasExactWord(["lei"])) return <Scale {...iconProps} />;
+  if (hasWord(["arquitetura", "urbanismo"])) return <Compass {...iconProps} />;
+  if (hasWord(["engenharia", "mecani", "eletrotec"])) return <Cog {...iconProps} />;
+  if (hasWord(["medicina", "enfermagem", "saude"])) return <HeartPulse {...iconProps} />;
+  if (hasWord(["astronomia", "espaco"])) return <Telescope {...iconProps} />;
+  if (hasWord(["multimedia", "video", "audiovisual", "cinema"])) return <MonitorPlay {...iconProps} />;
+  if (hasWord(["ecologia", "ambiente", "sustentabilidade"])) return <Leaf {...iconProps} />;
+  if (hasWord(["sociologia", "cidadania", "social"])) return <Network {...iconProps} />;
 
   return <BookOpen {...iconProps} />; // Ícone genérico
 };
