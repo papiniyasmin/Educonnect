@@ -37,7 +37,6 @@ interface FriendRequest {
 // FUNÇÕES AUXILIARES (Tratamento de dados visuais)
 // =========================================================================
 
-// Extrai as iniciais do nome para mostrar no Avatar quando não há foto
 const getInitials = (name: string | undefined) => {
   if (!name) return "U"; 
   const names = name.trim().split(" ");
@@ -47,7 +46,6 @@ const getInitials = (name: string | undefined) => {
   return name.substring(0, 2).toUpperCase();
 };
 
-// Garante que o URL da imagem do avatar está correto (local vs externo)
 const getAvatarUrl = (url: string | undefined) => {
   if (!url) return "";
   if (url.startsWith("http") || url.startsWith("data:")) {
@@ -70,13 +68,10 @@ export default function FriendRequestsPage() {
   
   // Dados do utilizador logado
   const [user, setUser] = useState<User | null>(null) 
-  // Lista de pedidos de amizade pendentes
   const [requests, setRequests] = useState<FriendRequest[]>([])   
-  // Controlos de estado de carregamento (loading spinners/text)
   const [loadingUser, setLoadingUser] = useState(true) 
   const [loadingRequests, setLoadingRequests] = useState(true) 
-  
-  // Contador para a bolinha vermelha no ícone do sino (notificações não lidas)
+
   const [unreadNotifsCount, setUnreadNotifsCount] = useState(0)
 
   // =========================================================================

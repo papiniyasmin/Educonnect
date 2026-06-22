@@ -1,0 +1,445 @@
+@import '../../styles/variables';
+@import '../../styles/mixins';
+
+.dashboard {
+  min-height: 100vh;
+  @include gradient-background;
+}
+
+.header {
+  border-bottom: 1px solid rgba($slate-700, 0.5);
+  background-color: rgba($slate-900, 0.8);
+  backdrop-filter: blur(8px);
+  
+  .headerContent {
+    @include flex-between;
+    padding: $spacing-4 0;
+  }
+  
+  .headerLeft {
+    @include flex-start;
+    gap: $spacing-4;
+    
+    .logo {
+      @include flex-start;
+      gap: $spacing-2;
+      
+      .logoIcon {
+        width: 32px;
+        height: 32px;
+        background-color: $primary-emerald;
+        border-radius: $border-radius-lg;
+        @include flex-center;
+        
+        svg {
+          width: 20px;
+          height: 20px;
+          color: $white;
+        }
+      }
+      
+      .logoText {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: $white;
+      }
+    }
+    
+    .navigation {
+      @include flex-start;
+      gap: $spacing-6;
+      
+      @include mobile {
+        display: none;
+      }
+      
+      a {
+        color: $slate-300;
+        @include transition-smooth;
+        
+        &:hover {
+          color: $white;
+        }
+        
+        &.active {
+          color: $primary-emerald;
+        }
+      }
+    }
+  }
+  
+  .headerRight {
+    @include flex-start;
+    gap: $spacing-4;
+    
+    .headerButton {
+      @include button-ghost;
+      padding: $spacing-2;
+      
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+    
+    .userSection {
+      @include flex-start;
+      gap: $spacing-2;
+      
+      .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        overflow: hidden;
+        
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        
+        .avatarFallback {
+          width: 100%;
+          height: 100%;
+          background-color: $primary-emerald;
+          @include flex-center;
+          color: $white;
+          font-size: 0.75rem;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+.main {
+  padding: $spacing-8 0;
+  
+  .mainContent {
+    display: grid;
+    gap: $spacing-8;
+    grid-template-columns: 1fr;
+    
+    @include desktop {
+      grid-template-columns: 1fr 2fr 1fr;
+    }
+  }
+}
+
+.sidebar {
+  .sidebarCard {
+    @include card-base;
+    margin-bottom: $spacing-6;
+    
+    .cardHeader {
+      padding: $spacing-4 $spacing-6 $spacing-4 $spacing-6;
+      border-bottom: 1px solid $slate-700;
+      
+      .userInfo {
+        @include flex-start;
+        gap: $spacing-3;
+        
+        .userAvatar {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          overflow: hidden;
+          
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          
+          .avatarFallback {
+            width: 100%;
+            height: 100%;
+            background-color: $primary-emerald;
+            @include flex-center;
+            color: $white;
+            font-weight: 600;
+          }
+        }
+        
+        .userDetails {
+          .userName {
+            color: $white;
+            font-weight: 600;
+            margin-bottom: $spacing-1;
+          }
+          
+          .userMeta {
+            color: $slate-400;
+            font-size: 0.875rem;
+            margin: 0;
+          }
+        }
+      }
+    }
+    
+    .cardContent {
+      padding: $spacing-6;
+      
+      .statsGrid {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-2;
+        
+        .statItem {
+          @include flex-between;
+          font-size: 0.875rem;
+          
+          .statLabel {
+            color: $slate-400;
+          }
+          
+          .statValue {
+            color: $white;
+          }
+        }
+      }
+      
+      .groupsList {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-3;
+        
+        .groupItem {
+          @include flex-start;
+          gap: $spacing-2;
+          
+          .groupIcon {
+            width: 32px;
+            height: 32px;
+            border-radius: $border-radius-lg;
+            @include flex-center;
+            
+            &.blue {
+              background-color: rgba($blue-500, 0.2);
+              
+              svg {
+                color: $blue-400;
+              }
+            }
+            
+            &.green {
+              background-color: rgba($green-500, 0.2);
+              
+              svg {
+                color: $green-400;
+              }
+            }
+            
+            svg {
+              width: 16px;
+              height: 16px;
+            }
+          }
+          
+          .groupInfo {
+            .groupName {
+              color: $white;
+              font-size: 0.875rem;
+              margin-bottom: $spacing-1;
+            }
+            
+            .groupMeta {
+              color: $slate-400;
+              font-size: 0.75rem;
+              margin: 0;
+            }
+          }
+        }
+      }
+    }
+    
+    .cardTitle {
+      color: $white;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: $spacing-4;
+    }
+  }
+}
+
+.feed {
+  .createPost {
+    margin-bottom: $spacing-6;
+  }
+  
+  .filterBar {
+    @include card-base;
+    padding: $spacing-4;
+    margin-bottom: $spacing-6;
+    
+    .filterContent {
+      @include flex-start;
+      gap: $spacing-2;
+      overflow-x: auto;
+      
+      svg {
+        width: 16px;
+        height: 16px;
+        color: $slate-400;
+        flex-shrink: 0;
+      }
+      
+      .filterButton {
+        @include button-base;
+        padding: $spacing-2 $spacing-4;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        
+        &.active {
+          background-color: $primary-emerald;
+          color: $white;
+          
+          &.red {
+            background-color: $red-500;
+          }
+          
+          &.orange {
+            background-color: $orange-500;
+          }
+          
+          &.green {
+            background-color: $green-500;
+          }
+          
+          &.purple {
+            background-color: $purple-500;
+          }
+        }
+        
+        &:not(.active) {
+          background-color: transparent;
+          color: $slate-400;
+          
+          &:hover {
+            color: $white;
+          }
+        }
+      }
+    }
+  }
+  
+  .feedPosts {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-6;
+  }
+  
+  .emptyState {
+    @include card-base;
+    padding: $spacing-8;
+    text-align: center;
+    
+    p {
+      color: $slate-400;
+      margin: 0;
+    }
+  }
+}
+
+.rightSidebar {
+  .suggestionsList {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-4;
+    
+    .suggestionItem {
+      @include flex-between;
+      
+      .suggestionUser {
+        @include flex-start;
+        gap: $spacing-2;
+        
+        .suggestionAvatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          overflow: hidden;
+          
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+          
+          .avatarFallback {
+            width: 100%;
+            height: 100%;
+            @include flex-center;
+            color: $white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            
+            &.pink {
+              background-color: $pink-500;
+            }
+            
+            &.orange {
+              background-color: $orange-500;
+            }
+          }
+        }
+        
+        .suggestionInfo {
+          .suggestionName {
+            color: $white;
+            font-size: 0.875rem;
+            margin-bottom: $spacing-1;
+          }
+          
+          .suggestionMeta {
+            color: $slate-400;
+            font-size: 0.75rem;
+            margin: 0;
+          }
+        }
+      }
+      
+      .connectButton {
+        @include button-base;
+        padding: $spacing-1 $spacing-2;
+        background-color: transparent;
+        border: 1px solid rgba($primary-emerald, 0.5);
+        color: $primary-emerald;
+        
+        &:hover {
+          background-color: rgba($primary-emerald, 0.1);
+        }
+        
+        svg {
+          width: 12px;
+          height: 12px;
+        }
+      }
+    }
+  }
+  
+  .activityList {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-3;
+    
+    .activityItem {
+      font-size: 0.875rem;
+      
+      .activityText {
+        color: $slate-300;
+        margin-bottom: $spacing-1;
+        
+        .highlight {
+          color: $primary-emerald;
+        }
+      }
+      
+      .activityTime {
+        color: $slate-500;
+        font-size: 0.75rem;
+        margin: 0;
+      }
+    }
+  }
+}

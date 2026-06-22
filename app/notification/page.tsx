@@ -120,9 +120,9 @@ export default function NotificationsPage() {
   // 3. Marca TODAS as notificações como Lidas
   const handleMarkAllAsRead = async () => {
     try {
-      const res = await fetch("/api/notifications", { method: "PUT" }) // Rota PUT para atualizar o estado no Backend
+      const res = await fetch("/api/notifications", { method: "PUT" }) 
       if (res.ok) {
-        // Optimistic UI: Em vez de fazer novo fetch, atualiza instantaneamente a lista no Front-End mudando `is_read` para 1
+      
         setNotifications(prev => prev.map(n => ({ ...n, is_read: 1 })))
       }
     } catch (error) {
@@ -137,14 +137,13 @@ export default function NotificationsPage() {
   // Define qual Ícone mostrar dependendo do TIPO de notificação
   const getIcon = (type: string) => {
     switch (type.toUpperCase()) {
-      case "LIKE": return <Heart size={14} className="text-red-500 fill-red-500" /> // Coração vermelho
-      case "COMENTARIO": return <MessageSquare size={14} className="text-blue-500" /> // Balão de fala azul
-      case "PEDIDO_AMIZADE": return <UserPlus size={14} className="text-emerald-500" /> // Bonequinho verde
-      default: return <Bell size={14} className="text-slate-400" /> // Sino padrão para tipos desconhecidos
+      case "LIKE": return <Heart size={14} className="text-red-500 fill-red-500" /> 
+      case "COMENTARIO": return <MessageSquare size={14} className="text-blue-500" />
+      case "PEDIDO_AMIZADE": return <UserPlus size={14} className="text-emerald-500" /> 
+      default: return <Bell size={14} className="text-slate-400" /> 
     }
   }
 
-  // Formata a data para formato Português (Ex: 02 fev, 14:30)
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat('pt-PT', {
       day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
