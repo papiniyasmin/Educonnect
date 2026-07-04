@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Lock, AlertCircle, CheckCircle } from "lucide-react";
 import styles from "../login/login.module.scss";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -24,8 +24,8 @@ export default function ResetPasswordPage() {
       setError("As palavras-passe não coincidem.");
       return;
     }
-    if (password.length < 6) {
-      setError("A palavra-passe deve ter pelo menos 6 caracteres.");
+    if (password.length < 8) {
+      setError("A palavra-passe deve ter pelo menos 8 caracteres.");
       return;
     }
 
@@ -136,5 +136,13 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>A carregar...</div>}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
