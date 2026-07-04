@@ -3,7 +3,7 @@ import pool from "@/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// ✅ Origens permitidas (website + app mobile)
+// ✅ Origens permitidas
 const ALLOWED_ORIGINS = [
   "https://educonnect-eopy.vercel.app",
   "http://localhost:3000",
@@ -21,15 +21,6 @@ function getCorsHeaders(origin: string | null) {
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "true", // ✅ necessário para cookies do website
   };
-}
-
-// ✅ Preflight para app mobile
-export async function OPTIONS(req: Request) {
-  const origin = req.headers.get("origin");
-  return new NextResponse(null, {
-    status: 200,
-    headers: getCorsHeaders(origin),
-  });
 }
 
 export async function POST(req: Request) {
