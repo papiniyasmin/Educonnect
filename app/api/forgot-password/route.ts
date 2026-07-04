@@ -26,10 +26,12 @@ export async function POST(req: Request) {
       [email]
     );
 
-    // Nota: respondemos sempre "sucesso", mesmo que o email não exista,
-    // para não revelar a terceiros que emails estão registados na plataforma.
+    // Se o email não existir, avisamos o utilizador em vez de fingir sucesso
     if (users.length === 0) {
-      return NextResponse.json({ success: true });
+      return NextResponse.json(
+        { error: "Não existe nenhuma conta associada a este email." },
+        { status: 404 }
+      );
     }
     const userId = users[0].id;
     const userName = users[0].nome;
@@ -70,14 +72,11 @@ export async function POST(req: Request) {
       html: htmlDoEmail,
     };
 
-    // Envio assíncrono, sem bloquear a resposta ao utilizador
-    transporter.sendMail(mailOptions).catch((err) =>
-      console.error("Erro ao enviar email de recuperação:", err)
-    );
+    // ---------------------------------------------------------
+    // 5. ENVIAR O EMAIL E SÓ RESPONDER SUCESSO SE FOR ENVIADO
+    // ---------------------------------------------------------
+    await transporter.sendMail(mailOptions);
 
-    // ---------------------------------------------------------
-    // 5. RESPOSTA IMEDIATA
-    // ---------------------------------------------------------
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Erro ao processar recuperação de palavra-passe:", error);
