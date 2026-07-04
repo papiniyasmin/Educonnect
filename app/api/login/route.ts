@@ -7,7 +7,6 @@ import jwt from "jsonwebtoken";
 const ALLOWED_ORIGINS = [
   "https://educonnect-eopy.vercel.app",
   "http://localhost:3000",
-  "http://localhost:8081", // Expo web
 ];
 
 function getCorsHeaders(origin: string | null) {
