@@ -3,7 +3,7 @@ import pool from "@/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// ✅ Origens permitidas
+
 const ALLOWED_ORIGINS = [
   "https://educonnect-eopy.vercel.app",
   "http://localhost:3000",
@@ -19,7 +19,7 @@ function getCorsHeaders(origin: string | null) {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Credentials": "true", // ✅ necessário para cookies do website
+    "Access-Control-Allow-Credentials": "true", 
   };
 }
 
@@ -86,8 +86,7 @@ export async function POST(req: Request) {
         success: true,
         message: "Login efetuado com sucesso!",
         userId: user.id,
-        nome: user.nome,  // ✅ website e app recebem o nome
-        token: token,     // ✅ app mobile usa este token
+        nome: user.nome, 
       },
       { headers: corsHeaders }
     );

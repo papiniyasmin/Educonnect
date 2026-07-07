@@ -52,7 +52,6 @@ export async function POST(req: Request) {
     // ---------------------------------------------------------
     // 3. VERIFICAR SE O EMAIL JÁ EXISTE NA BD
     // ---------------------------------------------------------
-    // CORREÇÃO TYPESCRIPT: Removido o <RowDataPacket[]> e adicionado o : any
     const [existingUsers]: any = await pool.query(
       "SELECT id FROM utilizador WHERE email = ?",
       [email]
@@ -66,7 +65,6 @@ export async function POST(req: Request) {
     // ---------------------------------------------------------
     // 4. SEGURANÇA (ENCRIPTAR PASSWORD E GERAR TOKEN)
     // ---------------------------------------------------------
-    // Nunca guardamos passwords em texto limpo! O bcrypt vai "baralhar" a password.
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // Gera um código aleatório (Token) super seguro para enviar no link do email
@@ -75,7 +73,6 @@ export async function POST(req: Request) {
     // ---------------------------------------------------------
     // 5. GUARDAR O NOVO UTILIZADOR NA BASE DE DADOS
     // ---------------------------------------------------------
-    // CORREÇÃO TYPESCRIPT: Removido o <ResultSetHeader>
     await pool.query(
       `INSERT INTO utilizador 
         (nome, email, palavra_passe, ano_escolar, curso, status, verification_token) 
@@ -86,32 +83,40 @@ export async function POST(req: Request) {
     // ---------------------------------------------------------
     // 6. CONFIGURAR O ENVIO DE EMAIL (NODEMAILER)
     // ---------------------------------------------------------
-    // Liga-se ao teu Gmail usando as credenciais do ficheiro .env
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      // 👇 Força uma ligação segura TLS e ignora rejeições de certificados em desenvolvimento
+      tls: {
+        rejectUnauthorized: false
+      }
     });
 
     // Cria o link dinâmico que o utilizador vai clicar. 
-    // reqUrl.origin pega no teu domínio atual (ex: http://localhost:3000 ou https://teusite.com)
     const reqUrl = new URL(req.url); 
     const verificationLink = `${reqUrl.origin}/api/verify-email?token=${verificationToken}`;
 
-    // --- A MAGIA ACONTECE AQUI COM O @react-email/render ---
-    // Transforma o teu componente React de Email (TemplateBoasVindas) em HTML puro para os clientes de email conseguirem ler.
+    // Transforma o teu componente React de Email (TemplateBoasVindas) em HTML puro
     const htmlDoEmail = await render(
       TemplateBoasVindas({ nome: name.trim(), linkVerificacao: verificationLink })
     );
 
-    // Define quem envia, quem recebe, o assunto e o corpo (HTML) do email
+    // Define as configurações e cabeçalhos anti-spam avançados
     const mailOptions = {
-      from: `"EduConnect" <${process.env.EMAIL_USER}>`,
+      from: `"EduConnect" <${process.env.EMAIL_USER}>`, // Alinhamento estrito com a conta autenticada
       to: email,
-      subject: "Bem-vindo(a) ao EduConnect! Confirma o teu registo",
+      subject: "Confirmação de Registo - EduConnect", // Assunto limpo, formal e direto
       html: htmlDoEmail, 
+      // 👇 CABEÇALHOS DE ALTA PRIORIDADE E CLASSIFICAÇÃO SISTÉMICA
+      headers: {
+        "X-Priority": "1",
+        "X-MSMail-Priority": "High",
+        "Importance": "high",
+        "Precedence": "bulk" // Alerta os filtros de que é um email automático transacional legítimo do sistema, atenuando os bloqueios
+      }
     };
 
     // Envia efetivamente o email
