@@ -130,7 +130,6 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Erro no registo:", error);
     
-    // Tratamento específico de erro do MySQL caso um campo exceda o limite de caracteres
     if (error.code === 'ER_TRUNCATED_WRONG_VALUE_FOR_FIELD') {
        return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
     }
