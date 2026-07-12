@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/db"; 
 import { getUserId } from "@/lib/auth"; // <--- Importamos a tua função mágica de autenticação
+export const dynamic = "force-dynamic";
 
 // =========================================================================
 // GET: Vai buscar as notificações mais recentes do utilizador logado

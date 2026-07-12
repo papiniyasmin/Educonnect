@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import pool from "@/db";
 import bcrypt from "bcryptjs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
@@ -25,8 +26,9 @@ export async function POST(req: Request) {
     // 3. ENCRIPTAR A NOVA PASSWORD E INVALIDAR O TOKEN
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Ajustado para 'palavra_passe' conforme configurado na tua base de dados
     await pool.query(
-      "UPDATE utilizador SET password = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?",
+      "UPDATE utilizador SET palavra_passe = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?",
       [hashedPassword, userId]
     );
 
