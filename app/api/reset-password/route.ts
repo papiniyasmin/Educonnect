@@ -1,23 +1,17 @@
 import { NextResponse } from "next/server";
 import pool from "@/db";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
-// =========================================================================
-// POST: Redefinir a palavra-passe usando o token
-// =========================================================================
 export async function POST(req: Request) {
   try {
-    // ---------------------------------------------------------
+    
     // 1. LER TOKEN E NOVA PASSWORD
-    // ---------------------------------------------------------
     const { token, password } = await req.json();
     if (!token || !password) {
       return NextResponse.json({ error: "Dados incompletos." }, { status: 400 });
     }
 
-    // ---------------------------------------------------------
     // 2. VERIFICAR SE O TOKEN EXISTE E AINDA É VÁLIDO
-    // ---------------------------------------------------------
     const [users]: any = await pool.query(
       "SELECT id FROM utilizador WHERE reset_token = ? AND reset_token_expires > NOW()",
       [token]
@@ -28,9 +22,7 @@ export async function POST(req: Request) {
     }
     const userId = users[0].id;
 
-    // ---------------------------------------------------------
     // 3. ENCRIPTAR A NOVA PASSWORD E INVALIDAR O TOKEN
-    // ---------------------------------------------------------
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await pool.query(
@@ -38,9 +30,7 @@ export async function POST(req: Request) {
       [hashedPassword, userId]
     );
 
-    // ---------------------------------------------------------
     // 4. RESPOSTA DE SUCESSO
-    // ---------------------------------------------------------
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Erro ao redefinir a palavra-passe:", error);
