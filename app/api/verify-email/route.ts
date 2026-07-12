@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import pool from "@/db";
+export const dynamic = "force-dynamic";
 
 // =========================================================================
 // GET: Verificar o Email do Utilizador (Ativação de Conta)
