@@ -125,22 +125,28 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className={styles.footer}>
-        <div className={styles.container}>
-          <div className={styles.footerContent}>
-            <div className={styles.footerLogo}>
-              <div className={styles.footerLogoIcon}>
-                <BookOpen size={20} />
-              </div>
-              <span>EduConnect</span>
-            </div>
-            <p className={styles.footerText}>
-              © 2025 EduConnect. Desenvolvido para conectar o futuro.
-            </p>
+    {/* Footer */}
+    <footer className={styles.footer}>
+      <div className={styles.container}>
+        <div className={styles.footerContent}>
+          <div className={styles.footerLogo}>
+            <Link href="/" className={styles.logoLink}>
+              <Image 
+                src="/logo.png" 
+                alt="Logo EduConnect" 
+                width={160} 
+                height={40} 
+                priority 
+                className={styles.logoImage} 
+              />
+            </Link>
           </div>
+          <p className={styles.footerText}>
+            © 2025 EduConnect. Desenvolvido para conectar o futuro.
+          </p>
         </div>
-      </footer>
+      </div>
+    </footer>
     </div>
   )
 }
